@@ -1,0 +1,19 @@
+{
+  "name": "dp-dd-search-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Data Discovery search prototyping",
+  "main": "index.html",
+  "repository": {
+    "url": "git@github.com:ONSdigital/dp-dd-search-frontend.git",
+    "type": "git"
+  },
+  "author": "Crispioso <crispin.merriman@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "babel main.js --out-file assets/main.js",
+    "watch": "babel main.js --watch --out-file assets/main.js"
+  },
+  "dependencies": {
+    "babel-cli": "^6.22.2"
+  }
+}

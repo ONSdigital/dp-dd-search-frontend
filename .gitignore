@@ -1,0 +1,11 @@
+# Mac OS
+*.DS_store
+
+# IntelliJ / Webstorm
+.idea
+
+# NPM
+node_modules
+
+# Yarn
+yarn.lock

@@ -1,0 +1,60 @@
+/** Styles that over-ride or extend the sixteens main.css **/
+.search__input {
+    background: #ffffff;
+}
+
+/* Sticky footer */
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+main {
+    flex: 1;
+}
+
+/* Other stuff */
+.search-text {
+    font-size: 19px;
+}
+
+.result {
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
+.result__title {
+    margin-top: 8px;
+    font-weight: 600;
+}
+
+.result__description {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 16px;
+}
+
+.result__metadata {
+    font-weight: 600;
+    margin-right: 16px;
+    position: relative;
+    display: inline-block; /* So that capitilisation of first letter */
+}
+
+.result__metadata:first-letter {
+    text-transform: uppercase;
+}
+
+.result__metadata:first-of-type:after {
+    content: "";
+    border-right: 2px solid #414042;
+    height: 60%;
+    top: 20%;
+    margin-left: 7px;
+    margin-right: 8px;
+    position: absolute;
+}
+
+.result__metadata:first-letter {
+    text-transform: uppercase;
+}
