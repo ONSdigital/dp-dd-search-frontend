@@ -4,6 +4,9 @@
 const hostname = location.hostname;
 const env = getEnvironmentType(hostname);
 const apiUrl = env === "development" ? "http://localhost:20051" : "TODO";
+const appElem = document.getElementById('app');
+const searchElem = document.getElementById('search');
+const inputElem = document.getElementById('search__input');
 
 function getEnvironmentType(hostname) {
     switch (hostname) {
@@ -73,9 +76,17 @@ function resultItemComponent(data) {
  */
 
 function updateResults() {
+    console.log('Fetching results for "%s"', state.query);
+
+    if (state.query !== inputElem.value) {
+        inputElem.value = state.query;
+    }
+
     fetch(apiUrl + `/search?q=` + state.query).then(response => response.json()).then(response => {
+        state.count = response.total_results;
+        appElem.innerHTML = searchTextComponent();
+
         if (response.total_results === 0) {
-            document.getElementById('app').innerHTML = searchTextComponent();
             return;
         }
 
@@ -89,22 +100,36 @@ function updateResults() {
             return resultItemComponent(data);
         });
 
-        state.count = response.total_results;
-
-        document.getElementById('app').innerHTML = searchTextComponent() + results.join('');
+        appElem.innerHTML += results.join('');
     });
 }
 
 function bindSearchSubmit() {
-    const searchElem = document.getElementById('search');
 
     searchElem.addEventListener('submit', event => {
-        const query = document.getElementById('search__input').value;
+        const query = inputElem.value;
         event.preventDefault();
         state.query = query;
+        window.history.pushState({ query: query }, ``, `?q=` + query);
         updateResults();
     });
 }
 
-updateResults();
-bindSearchSubmit();
+function bindHistoryState() {
+    window.onpopstate = event => {
+        if (event.state) {
+            state.query = event.state.query;
+        } else {
+            state.query = ``;
+        }
+        updateResults();
+    };
+}
+
+function init() {
+    updateResults();
+    bindSearchSubmit();
+    bindHistoryState();
+}
+
+init();
