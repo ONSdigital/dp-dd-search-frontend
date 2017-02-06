@@ -84,6 +84,12 @@ function updateResults() {
         inputElem.value = state.query;
     }
 
+    if (state.query) {
+        document.getElementById('title').innerHTML = state.query + " - Search - Office for National Statistics";
+    } else {
+        document.getElementById('title').innerHTML = "Search - Office for National Statistics";
+    }
+
     fetch(apiUrl + "/search?q=" + state.query).then(function (response) {
         return response.json();
     }).then(function (response) {
@@ -114,6 +120,13 @@ function bindSearchSubmit() {
         var query = inputElem.value;
         event.preventDefault();
         state.query = query;
+
+        if (!query) {
+            window.history.pushState({ query: query }, "", "/");
+            updateResults();
+            return;
+        }
+
         window.history.pushState({ query: query }, "", "?q=" + query);
         updateResults();
     });
