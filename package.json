@@ -10,10 +10,11 @@
   "author": "Crispioso <crispin.merriman@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "babel main.js --out-file assets/main.js",
-    "watch": "babel main.js --watch --out-file assets/main.js"
+    "build": "babel main.js --out-file assets/main.js --presets es2015",
+    "watch": "babel main.js --watch --out-file assets/main.js --presets es2015"
   },
-  "dependencies": {
-    "babel-cli": "^6.22.2"
+  "devDependencies": {
+    "babel-cli": "^6.22.2",
+    "babel-preset-es2015": "^6.22.0"
   }
 }
