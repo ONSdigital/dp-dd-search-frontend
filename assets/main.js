@@ -122,7 +122,7 @@ function bindSearchSubmit() {
         state.query = query;
 
         if (!query) {
-            window.history.pushState({ query: query }, "", "/");
+            window.history.pushState({ query: query }, "", location.pathname);
             updateResults();
             return;
         }
