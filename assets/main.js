@@ -1,47 +1,49 @@
+"use strict";
+
 /**
  * Application variables
  */
-const hostname = location.hostname;
-const env = getEnvironmentType(hostname);
-const apiUrl = env === "development" ? "http://localhost:20051" : "TODO";
-const appElem = document.getElementById('app');
-const searchElem = document.getElementById('search');
-const inputElem = document.getElementById('search__input');
+var hostname = location.hostname;
+var env = getEnvironmentType(hostname);
+var apiUrl = env === "development" ? "http://localhost:20051" : "TODO";
+var appElem = document.getElementById('app');
+var searchElem = document.getElementById('search');
+var inputElem = document.getElementById('search__input');
 
 function getEnvironmentType(hostname) {
     switch (hostname) {
         case 'localhost':
             {
-                return `development`;
+                return "development";
             }
         case '127.0.0.1':
             {
-                return `development`;
+                return "development";
             }
         default:
             {
-                return `production`;
+                return "production";
             }
     }
 }
 
-let state = {
+var state = {
     count: 0,
-    query: getUrlParams().q || ``
+    query: getUrlParams().q || ""
 };
 
 function getUrlParams() {
-    const queryString = location.search;
+    var queryString = location.search;
     if (!queryString) {
         return {};
     }
 
-    let queries = queryString.split(/[\&?]+/);
+    var queries = queryString.split(/[\&?]+/);
     queries.splice(0, 1);
 
-    let returnValue = {};
-    queries.forEach(query => {
-        const splitQuery = query.split('=');
+    var returnValue = {};
+    queries.forEach(function (query) {
+        var splitQuery = query.split('=');
         returnValue[splitQuery[0]] = splitQuery[1];
     });
 
@@ -53,22 +55,22 @@ function getUrlParams() {
  */
 
 function searchTextComponent() {
-    const query = state.query;
-    const count = state.count;
+    var query = state.query;
+    var count = state.count;
 
     if (query && count === 0) {
-        return `<h2 class="search-text margin-top--1 margin-bottom--4">No results for <strong>` + state.query + `</strong></h2>`;
+        return "<h2 class=\"search-text margin-top--1 margin-bottom--4\">No results for <strong>" + state.query + "</strong></h2>";
     }
 
     if (!query) {
-        return `<h2 class="search-text margin-top--1 margin-bottom--4">No search query, showing all <strong>` + count + `</strong> results</h2>`;
+        return "<h2 class=\"search-text margin-top--1 margin-bottom--4\">No search query, showing all <strong>" + count + "</strong> results</h2>";
     }
 
-    return `<h2 class="search-text margin-top--1 margin-bottom--4"><strong>` + count + `</strong> results found for <strong>` + query + `</strong>.</h2>`;
+    return "<h2 class=\"search-text margin-top--1 margin-bottom--4\"><strong>" + count + "</strong> results found for <strong>" + query + "</strong>.</h2>";
 }
 
 function resultItemComponent(data) {
-    return `<div class="result border-top--iron-lg">` + `<h3 class="result__title"><a href="">` + data.title + `</a></h3>` + `<p class="result__description">` + data.description + `</p>` + `<span class="result__metadata">` + data.type + `</span>` + `<span class="result__metadata">Released on ` + data.releaseDate + `</span>` + `</div>`;
+    return "<div class=\"result border-top--iron-lg\">" + "<h3 class=\"result__title\"><a href=\"\">" + data.title + "</a></h3>" + "<p class=\"result__description\">" + data.description + "</p>" + "<span class=\"result__metadata\">" + data.type + "</span>" + "<span class=\"result__metadata\">Released on " + data.releaseDate + "</span>" + "</div>";
 }
 
 /**
@@ -82,7 +84,9 @@ function updateResults() {
         inputElem.value = state.query;
     }
 
-    fetch(apiUrl + `/search?q=` + state.query).then(response => response.json()).then(response => {
+    fetch(apiUrl + "/search?q=" + state.query).then(function (response) {
+        return response.json();
+    }).then(function (response) {
         state.count = response.total_results;
         appElem.innerHTML = searchTextComponent();
 
@@ -90,8 +94,8 @@ function updateResults() {
             return;
         }
 
-        const results = response.results.map(result => {
-            const data = {
+        var results = response.results.map(function (result) {
+            var data = {
                 title: result.body.title,
                 description: result.body.metadata.description,
                 type: result.type,
@@ -106,21 +110,21 @@ function updateResults() {
 
 function bindSearchSubmit() {
 
-    searchElem.addEventListener('submit', event => {
-        const query = inputElem.value;
+    searchElem.addEventListener('submit', function (event) {
+        var query = inputElem.value;
         event.preventDefault();
         state.query = query;
-        window.history.pushState({ query: query }, ``, `?q=` + query);
+        window.history.pushState({ query: query }, "", "?q=" + query);
         updateResults();
     });
 }
 
 function bindHistoryState() {
-    window.onpopstate = event => {
+    window.onpopstate = function (event) {
         if (event.state) {
             state.query = event.state.query;
         } else {
-            state.query = ``;
+            state.query = "";
         }
         updateResults();
     };
