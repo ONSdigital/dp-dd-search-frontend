@@ -5,7 +5,7 @@
  */
 var hostname = location.hostname;
 var env = getEnvironmentType(hostname);
-var apiUrl = env === "development" ? "http://localhost:20051" : "TODO";
+var apiUrl = env === "development" ? "http://localhost:20051" : "http://ec2-34-251-0-158.eu-west-1.compute.amazonaws.com/search";
 var appElem = document.getElementById('app');
 var searchElem = document.getElementById('search');
 var inputElem = document.getElementById('search__input');
