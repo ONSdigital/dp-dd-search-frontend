@@ -75,30 +75,6 @@ function resultItemComponent(data) {
  * Initialise application
  */
 
-function get (url) {
-    return new Promise(function (resolve, reject) {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', url);
-        xhr.onload = function() {
-            if (this.status >= 200 && this.status < 300) {
-                resolve(JSON.parse(xhr.response));
-            } else {
-                reject({
-                    status: this.status,
-                    statusText: xhr.statusText
-                });
-            }
-        };
-        xhr.onerror = function() {
-            reject({
-                status: this.status,
-                statusText: xhr.statusText
-            });
-        };
-        xhr.send();
-    });
-}
-
 function updateResults() {
     console.log('Fetching results for "%s"', state.query);
 
@@ -112,7 +88,7 @@ function updateResults() {
         document.getElementById('title').innerHTML = `Search - Office for National Statistics`;
     }
 
-    get(apiUrl + `/search?q=` + state.query).then(response => {
+    fetch(apiUrl + `/search?q=` + state.query).then(response => response.json()).then(response => {
         state.count = response.total_results;
         appElem.innerHTML = searchTextComponent();
 
