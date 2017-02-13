@@ -5,7 +5,7 @@
  */
 var hostname = location.hostname;
 var env = getEnvironmentType(hostname);
-var apiUrl = env === "development" ? "http://localhost:20051" : "http://ec2-34-251-0-158.eu-west-1.compute.amazonaws.com/search";
+var apiUrl = env === "development" ? "http://localhost:20051" : "http://ec2-34-251-0-158.eu-west-1.compute.amazonaws.com";
 var appElem = document.getElementById('app');
 var searchElem = document.getElementById('search');
 var inputElem = document.getElementById('search__input');
@@ -77,6 +77,30 @@ function resultItemComponent(data) {
  * Initialise application
  */
 
+function get(url) {
+    return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        xhr.onload = function () {
+            if (this.status >= 200 && this.status < 300) {
+                resolve(JSON.parse(xhr.response));
+            } else {
+                reject({
+                    status: this.status,
+                    statusText: xhr.statusText
+                });
+            }
+        };
+        xhr.onerror = function () {
+            reject({
+                status: this.status,
+                statusText: xhr.statusText
+            });
+        };
+        xhr.send();
+    });
+}
+
 function updateResults() {
     console.log('Fetching results for "%s"', state.query);
 
@@ -90,9 +114,7 @@ function updateResults() {
         document.getElementById('title').innerHTML = "Search - Office for National Statistics";
     }
 
-    fetch(apiUrl + "/search?q=" + state.query).then(function (response) {
-        return response.json();
-    }).then(function (response) {
+    get(apiUrl + "/search?q=" + state.query).then(function (response) {
         state.count = response.total_results;
         appElem.innerHTML = searchTextComponent();
 
