@@ -3,8 +3,7 @@
  */
 const hostname = location.hostname;
 const env = getEnvironmentType(hostname);
-// const apiUrl = env === "development" ? "http://localhost:20051" : "https://ec2-34-251-0-158.eu-west-1.compute.amazonaws.com";
-const apiUrl = "https://ec2-34-251-0-158.eu-west-1.compute.amazonaws.com";
+const apiUrl = env === "development" ? "http://localhost:20051" : "https://search.discovery.onsdigital.co.uk";
 const appElem = document.getElementById('app');
 const searchElem = document.getElementById('search');
 const inputElem = document.getElementById('search__input');
