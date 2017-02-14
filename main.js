@@ -3,7 +3,8 @@
  */
 const hostname = location.hostname;
 const env = getEnvironmentType(hostname);
-const apiUrl = env === "development" ? "http://localhost:20051" : "http://ec2-34-251-0-158.eu-west-1.compute.amazonaws.com";
+// const apiUrl = env === "development" ? "http://localhost:20051" : "https://ec2-34-251-0-158.eu-west-1.compute.amazonaws.com";
+const apiUrl = "https://ec2-34-251-0-158.eu-west-1.compute.amazonaws.com";
 const appElem = document.getElementById('app');
 const searchElem = document.getElementById('search');
 const inputElem = document.getElementById('search__input');
@@ -68,7 +69,7 @@ function searchTextComponent() {
 }
 
 function resultItemComponent(data) {
-    return `<div class="result border-top--iron-lg">` + `<h3 class="result__title"><a href="">` + data.title + `</a></h3>` + `<p class="result__description">` + data.description + `</p>` + `<span class="result__metadata">` + data.type + `</span>` + `<span class="result__metadata">Released on ` + data.releaseDate + `</span>` + `</div>`;
+    return `<div class="result border-top--iron-lg">` + `<h3 class="result__title"><a href="">` + data.title + `</a></h3>` + `<div class="result__description">` + data.description + `</div>` + `<span class="result__metadata">` + data.type + `</span>` + `<span class="result__metadata">Released on ` + data.releaseDate + `</span>` + `</div>`;
 }
 
 /**
@@ -97,12 +98,22 @@ function updateResults() {
         }
 
         const results = response.results.map(result => {
+            let date = result.body.metadata.release_date.split('+');
+
+            // Check for invalid date
+            if (date[1]) {
+                date.pop();
+                date.push('Z');
+                date = date.join('');
+            }
+
             const data = {
                 title: result.body.title,
                 description: result.body.metadata.description,
                 type: result.type,
-                releaseDate: new Date(result.body.metadata.release_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                releaseDate: new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
             };
+
             return resultItemComponent(data);
         });
 
