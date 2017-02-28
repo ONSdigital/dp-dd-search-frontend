@@ -145,10 +145,6 @@ function updateResults() {
         // Remove current results
         while (appElem.firstChild) appElem.removeChild(appElem.firstChild);
 
-        if (state.count === 0 && state.areaCount === 0) {
-            return;
-        }
-
         appElem.innerHTML += (buildAreaResults(response.area_results) + buildResults(response.results));
     }).catch(error => {
         console.log(`Error getting results data \n${error}`);

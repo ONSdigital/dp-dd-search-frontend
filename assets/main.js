@@ -5,7 +5,7 @@
  */
 var hostname = location.hostname;
 var env = getEnvironmentType(hostname);
-var apiUrl = "https://search.discovery.onsdigital.co.uk";
+var apiUrl = "https://search.discovery.onsdigital.co.uk"; // If this needs to point at local version on server in the future use the 'env' variable to detect whether it's the development or production build
 var appElem = document.getElementById('app');
 var searchElem = document.getElementById('search');
 var inputElem = document.getElementById('search__input');
@@ -119,11 +119,7 @@ function updateResults() {
         // Remove current results
         while (appElem.firstChild) {
             appElem.removeChild(appElem.firstChild);
-        }if (state.count === 0 && state.areaCount === 0) {
-            return;
-        }
-
-        appElem.innerHTML += buildAreaResults(response.area_results) + buildResults(response.results);
+        }appElem.innerHTML += buildAreaResults(response.area_results) + buildResults(response.results);
     }).catch(function (error) {
         console.log('Error getting results data \n' + error);
         while (appElem.firstChild) {
