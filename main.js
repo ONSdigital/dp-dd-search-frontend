@@ -210,7 +210,7 @@ function buildAreaResults(resultsData) {
 
     function wrapInContainer(children) {
         return (
-            `<div style="width: 100%;" class="float-left border-bottom--iron-md border-bottom--iron-lg margin-bottom--1 padding-bottom--2">
+            `<div style="width: 100%;" class="float-left border-bottom--iron-md border-bottom--iron-lg padding-bottom--2">
                 ${areaSearchTextComponent()}
                 ${children}
             </div>`
