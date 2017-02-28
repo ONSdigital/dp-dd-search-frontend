@@ -117,7 +117,7 @@ function areaResultItemComponent(data) {
             <h3 class="flush"><a href="">${data.title}</a></h3>
         </div>
         `
-    )
+    );
 }
 
 
@@ -169,7 +169,7 @@ function buildResults(resultsData) {
 
     function wrapInContainer(children) {
         return (
-            `<div class="col">
+            `<div class="col margin-bottom--3">
                 ${searchTextComponent()}
                 ${children}
             </div>`
