@@ -137,7 +137,7 @@ function buildResults(resultsData) {
     }
 
     function wrapInContainer(children) {
-        return '<div class="col">\n                ' + searchTextComponent() + '\n                ' + children + '\n            </div>';
+        return '<div class="col margin-bottom--3">\n                ' + searchTextComponent() + '\n                ' + children + '\n            </div>';
     }
 
     resultsData.map(function (result) {
