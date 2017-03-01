@@ -127,6 +127,21 @@ function areaResultItemComponent(data) {
 
 function updateResults() {
 
+    // Fetch polyfill
+    if (!window.fetch) {
+        console.log('Using Fetch API polyfill');
+        var js = document.createElement('script');
+        js.src = 'https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.2/fetch.min.js';
+        js.onload = function() {
+            updateResults();
+        };
+        js.onerror = function() {
+            console.log('Error getting fetch API polyfill');
+        };
+        document.head.appendChild(js);
+        return;
+    }
+
     if (state.query !== inputElem.value) {
         console.log('Fetching results for "%s"', state.query);
         inputElem.value = state.query;
