@@ -28,7 +28,11 @@ function getEnvironmentType(hostname) {
 let state = {
     count: 0,
     areaCount: 0,
-    query: getUrlParams().q || ``
+    query: getUrlParams().q || ``,
+    filter: {
+        id: getUrlParams().filter || ``,
+        name: getUrlParams().filter || ``
+    }
 };
 
 function getUrlParams() {
@@ -43,6 +47,12 @@ function getUrlParams() {
     let returnValue = {};
     queries.forEach(query => {
         const splitQuery = query.split('=');
+        try {
+            splitQuery[1] = decodeURIComponent(splitQuery[1]);
+        } catch(e) {
+            console.error(e);
+        }
+
         returnValue[splitQuery[0]] = splitQuery[1];
     });
 
@@ -56,6 +66,8 @@ function getUrlParams() {
 function searchTextComponent() {
     const query = state.query;
     const count = state.count;
+    const filter = state.filter.id;
+    const filterName = state.filter.name;
 
     function wrapInContainer(children) {
         return (
@@ -71,8 +83,16 @@ function searchTextComponent() {
         return wrapInContainer(`No results for <strong>'${state.query}'</strong>`);
     }
 
+    if (!query && filter) {
+        return wrapInContainer(`All <strong>'${count}'</strong> result, filtered by area type <strong>'${filterName}'</strong>`)
+    }
+
     if (!query) {
         return wrapInContainer(`No search query, showing all <strong>'${count}'</strong> results`);
+    }
+
+    if (query && filter) {
+        return wrapInContainer(`<strong>${count}</strong> results found for <strong>'${query}'</strong>, filter by area type <strong>'${filterName}'</strong>`)
     }
 
     return wrapInContainer(`<strong>${count}</strong> results found for <strong>'${query}'</strong>`);
@@ -114,7 +134,11 @@ function areaResultItemComponent(data) {
         `<div class="col col--lg-half background--iron-light margin-bottom--2 padding-top--2 padding-right--1 padding-bottom--2 padding-left--1">
             <span class="baseline">${data.type}</span>
             <span class="icon icon-arrow-right--dark float-right margin-top--1"></span>
-            <h3 class="flush"><a href="">${data.title}</a></h3>
+            <h3 class="flush">
+                <a class="area-link" href="/?q=${state.query}&filter=${data.type_id}" data-filter="${data.type_id}" data-filter-name="${data.type}">
+                    ${data.title}
+                </a>
+            </h3>
         </div>
         `
     );
@@ -130,7 +154,7 @@ function updateResults() {
     // Fetch polyfill
     if (!window.fetch) {
         console.log('Using Fetch API polyfill');
-        var js = document.createElement('script');
+        const js = document.createElement('script');
         js.src = 'https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.2/fetch.min.js';
         js.onload = function() {
             updateResults();
@@ -153,7 +177,7 @@ function updateResults() {
         document.getElementById('title').innerHTML = `Search - Office for National Statistics`;
     }
 
-    fetch(apiUrl + `/search?q=` + state.query).then(response => response.json()).then(response => {
+    fetch(apiUrl + `/search?q=` + state.query + '&filter=' + state.filter.id).then(response => response.json()).then(response => {
         state.count = response.total_results;
         state.areaCount = response.area_results ? response.area_results.length : 0;
 
@@ -161,6 +185,7 @@ function updateResults() {
         while (appElem.firstChild) appElem.removeChild(appElem.firstChild);
 
         appElem.innerHTML += (buildAreaResults(response.area_results) + buildResults(response.results));
+        bindAreaClick();
     }).catch(error => {
         console.log(`Error getting results data \n${error}`);
         while (appElem.firstChild) appElem.removeChild(appElem.firstChild);
@@ -235,8 +260,9 @@ function buildAreaResults(resultsData) {
     resultsData.some((result, index) => {
         const data = {
             title: result.body.title,
-            type: result.body.type
-        }
+            type: result.body.type,
+            type_id: result.body.type_id
+        };
 
         HTMLParts.push(areaResultItemComponent(data));
 
@@ -244,6 +270,25 @@ function buildAreaResults(resultsData) {
     });
 
     return wrapInContainer(HTMLParts.join(''));
+}
+
+function bindAreaClick() {
+
+    const areaLinks = document.querySelectorAll('.area-link');
+
+    areaLinks.forEach(link => {
+       link.addEventListener('click', event => {
+           handleClick(event);
+       });
+    });
+
+    function handleClick(event) {
+        event.preventDefault();
+        state.filter.id = event.target.getAttribute('data-filter');
+        state.filter.name = event.target.getAttribute('data-filter-name');
+        window.history.pushState({query: state.query, filter: state.filter.id}, ``, `?q=${state.query}&filter=${state.filter.id}`);
+        updateResults();
+    }
 }
 
 function bindSearchSubmit() {
@@ -254,12 +299,12 @@ function bindSearchSubmit() {
         state.query = query;
 
         if (!query) {
-            window.history.pushState({query: query}, ``, location.pathname);
+            window.history.pushState({query: query, filter:state.filter.id}, ``, location.pathname);
             updateResults();
             return;
         }
 
-        window.history.pushState({query: query}, ``, `?q=` + query);
+        window.history.pushState({query: query, filter:state.filter.id}, ``, `?q=${query}&filter=${state.filter.id}`);
         updateResults();
     });
 }

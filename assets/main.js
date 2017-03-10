@@ -30,7 +30,11 @@ function getEnvironmentType(hostname) {
 var state = {
     count: 0,
     areaCount: 0,
-    query: getUrlParams().q || ''
+    query: getUrlParams().q || '',
+    filter: {
+        id: getUrlParams().filter || '',
+        name: getUrlParams().filter || ''
+    }
 };
 
 function getUrlParams() {
@@ -45,6 +49,12 @@ function getUrlParams() {
     var returnValue = {};
     queries.forEach(function (query) {
         var splitQuery = query.split('=');
+        try {
+            splitQuery[1] = decodeURIComponent(splitQuery[1]);
+        } catch (e) {
+            console.error(e);
+        }
+
         returnValue[splitQuery[0]] = splitQuery[1];
     });
 
@@ -58,6 +68,8 @@ function getUrlParams() {
 function searchTextComponent() {
     var query = state.query;
     var count = state.count;
+    var filter = state.filter.id;
+    var filterName = state.filter.name;
 
     function wrapInContainer(children) {
         return '<div class="border-bottom--iron-md border-bottom--iron-lg">\n                <h2 class="search-text margin-top--2 margin-bottom--2">\n                    ' + children + '\n                </h2>\n            </div>';
@@ -67,8 +79,16 @@ function searchTextComponent() {
         return wrapInContainer('No results for <strong>\'' + state.query + '\'</strong>');
     }
 
+    if (!query && filter) {
+        return wrapInContainer('All <strong>\'' + count + '\'</strong> result, filtered by area type <strong>\'' + filterName + '\'</strong>');
+    }
+
     if (!query) {
         return wrapInContainer('No search query, showing all <strong>\'' + count + '\'</strong> results');
+    }
+
+    if (query && filter) {
+        return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>, filter by area type <strong>\'' + filterName + '\'</strong>');
     }
 
     return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>');
@@ -90,7 +110,7 @@ function resultItemComponent(data) {
 }
 
 function areaResultItemComponent(data) {
-    return '<div class="col col--lg-half background--iron-light margin-bottom--2 padding-top--2 padding-right--1 padding-bottom--2 padding-left--1">\n            <span class="baseline">' + data.type + '</span>\n            <span class="icon icon-arrow-right--dark float-right margin-top--1"></span>\n            <h3 class="flush"><a href="">' + data.title + '</a></h3>\n        </div>\n        ';
+    return '<div class="col col--lg-half background--iron-light margin-bottom--2 padding-top--2 padding-right--1 padding-bottom--2 padding-left--1">\n            <span class="baseline">' + data.type + '</span>\n            <span class="icon icon-arrow-right--dark float-right margin-top--1"></span>\n            <h3 class="flush">\n                <a class="area-link" href="/?q=' + state.query + '&filter=' + data.type_id + '" data-filter="' + data.type_id + '" data-filter-name="' + data.type + '">\n                    ' + data.title + '\n                </a>\n            </h3>\n        </div>\n        ';
 }
 
 /**
@@ -125,7 +145,7 @@ function updateResults() {
         document.getElementById('title').innerHTML = 'Search - Office for National Statistics';
     }
 
-    fetch(apiUrl + '/search?q=' + state.query).then(function (response) {
+    fetch(apiUrl + '/search?q=' + state.query + '&filter=' + state.filter.id).then(function (response) {
         return response.json();
     }).then(function (response) {
         state.count = response.total_results;
@@ -135,6 +155,7 @@ function updateResults() {
         while (appElem.firstChild) {
             appElem.removeChild(appElem.firstChild);
         }appElem.innerHTML += buildAreaResults(response.area_results) + buildResults(response.results);
+        bindAreaClick();
     }).catch(function (error) {
         console.log('Error getting results data \n' + error);
         while (appElem.firstChild) {
@@ -194,7 +215,8 @@ function buildAreaResults(resultsData) {
     resultsData.some(function (result, index) {
         var data = {
             title: result.body.title,
-            type: result.body.type
+            type: result.body.type,
+            type_id: result.body.type_id
         };
 
         HTMLParts.push(areaResultItemComponent(data));
@@ -205,6 +227,25 @@ function buildAreaResults(resultsData) {
     return wrapInContainer(HTMLParts.join(''));
 }
 
+function bindAreaClick() {
+
+    var areaLinks = document.querySelectorAll('.area-link');
+
+    areaLinks.forEach(function (link) {
+        link.addEventListener('click', function (event) {
+            handleClick(event);
+        });
+    });
+
+    function handleClick(event) {
+        event.preventDefault();
+        state.filter.id = event.target.getAttribute('data-filter');
+        state.filter.name = event.target.getAttribute('data-filter-name');
+        window.history.pushState({ query: state.query, filter: state.filter.id }, '', '?q=' + state.query + '&filter=' + state.filter.id);
+        updateResults();
+    }
+}
+
 function bindSearchSubmit() {
 
     searchElem.addEventListener('submit', function (event) {
@@ -213,12 +254,12 @@ function bindSearchSubmit() {
         state.query = query;
 
         if (!query) {
-            window.history.pushState({ query: query }, '', location.pathname);
+            window.history.pushState({ query: query, filter: state.filter.id }, '', location.pathname);
             updateResults();
             return;
         }
 
-        window.history.pushState({ query: query }, '', '?q=' + query);
+        window.history.pushState({ query: query, filter: state.filter.id }, '', '?q=' + query + '&filter=' + state.filter.id);
         updateResults();
     });
 }
