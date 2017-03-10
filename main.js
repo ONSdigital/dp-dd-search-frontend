@@ -291,7 +291,7 @@ function buildAreaResults(resultsData) {
     const count = state.areaCount;
     const query = state.query;
 
-    if (count === 0 | !query) {
+    if (count === 0 || !query) {
         return ``;
     }
 
@@ -344,14 +344,15 @@ function bindSearchSubmit() {
         const query = inputElem.value;
         event.preventDefault();
         state.query = query;
+        state.filter = {id: "", name: ""};
 
         if (!query) {
-            window.history.pushState({query: query, filter:state.filter.id}, ``, location.pathname);
+            window.history.pushState({query: query}, ``, location.pathname);
             updateResults();
             return;
         }
 
-        window.history.pushState({query: query, filter:state.filter.id}, ``, `?q=${query}&filter=${state.filter.id}`);
+        window.history.pushState({query: query}, ``, `?q=${query}`);
         updateResults();
     });
 }
