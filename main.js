@@ -63,7 +63,7 @@ function getUrlParams() {
  * HTML components
  */
 
-function searchTextComponent() {
+function searchTextComponent(children) {
     const query = state.query;
     const count = state.count;
     const filter = state.filter.id;
@@ -79,12 +79,12 @@ function searchTextComponent() {
         )
     }
 
-    if (query && count === 0) {
-        return wrapInContainer(`No results for <strong>'${state.query}'</strong>`);
+    if (children) {
+        return wrapInContainer(children)
     }
 
-    if (!query && filter) {
-        return wrapInContainer(`All <strong>'${count}'</strong> result, filtered by area type <strong>'${filterName}'</strong>`)
+    if (query && count === 0) {
+        return wrapInContainer(`No results for <strong>'${state.query}'</strong>`);
     }
 
     if (!query) {
@@ -146,7 +146,7 @@ function areaResultItemComponent(data) {
 
 
 /**
- * Initialise application
+ * View and data logic
  */
 
 function updateResults() {
@@ -184,6 +184,17 @@ function updateResults() {
         // Remove current results
         while (appElem.firstChild) appElem.removeChild(appElem.firstChild);
 
+        if (state.filter.id && state.count === 0) {
+            console.log(`Display all results for ${state.filter.name}`);
+            fetch(`${apiUrl}/search?filter=${state.filter.id}`).then(response => response.json()).then(response => {
+                state.count = response.total_results;
+                state.areaCount = response.area_results ? response.area_results.length : 0;
+                appElem.innerHTML += buildAllResultForAreaType(response.results);
+                bindAreaClick();
+            });
+            return false;
+        }
+
         appElem.innerHTML += (buildAreaResults(response.area_results) + buildResults(response.results));
         bindAreaClick();
     }).catch(error => {
@@ -197,6 +208,42 @@ function updateResults() {
             </div>
         `
     });
+}
+
+function buildAllResultForAreaType(resultsData) {
+    const HTMLParts = [];
+    const searchText = `All <strong>'${state.count}'</strong> results, filtered by area type <strong>'${state.filter.name}'</strong>`;
+
+    function wrapInContainer(children) {
+        return (
+            `<div class="col margin-bottom--3">
+                ${searchTextComponent(searchText)}
+                ${children}
+            </div>`
+        );
+    }
+
+    resultsData.map(result => {
+        let date = result.body.metadata.release_date.split('+');
+
+        // Check for invalid date
+        if (date[1]) {
+            date.pop();
+            date.push('Z');
+            date = date.join('');
+        }
+
+        const data = {
+            title: result.body.title,
+            description: result.body.metadata.description,
+            type: result.type,
+            releaseDate: new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+        };
+
+        HTMLParts.push(resultItemComponent(data));
+    });
+
+    return wrapInContainer(HTMLParts.join(''));
 }
 
 function buildResults(resultsData) {
