@@ -101,7 +101,6 @@ var state = function () {
         key: 'updateState',
         value: function updateState(action) {
             var newState = this.getState();
-            console.log('State update: \n', action);
             switch (action.type) {
                 case 'UPDATE_COUNT':
                     {
@@ -162,7 +161,7 @@ var templates = function () {
             }
 
             if (query && filter) {
-                return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>, filter by area type <strong>\'' + filterName + '\'</strong>');
+                return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>, filtered by area type <strong>\'' + filterName + '\'</strong>');
             }
 
             return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>');
@@ -212,14 +211,15 @@ var render = function () {
     }, {
         key: 'allResults',
         value: function allResults(areaResults, datasetResults) {
-            appElem.innerHTML += this.areaResults(areaResults) + this.datasetResults(datasetResults);
+            this.areaResults(areaResults);
+            this.datasetResults(datasetResults);
         }
     }, {
         key: 'allResultsForAreaType',
         value: function allResultsForAreaType(resultsData) {
             var HTMLParts = [];
             var currentState = state.getState();
-            var searchText = 'All <strong>\'' + currentState.count + '\'</strong> results, filtered by area type <strong>\'' + currentState.filter.name + '\'</strong>';
+            var searchText = 'All <strong>\'' + currentState.count + '\'</strong> results, filtered by <strong>\'' + currentState.query + '\'</strong> as a <strong>\'' + currentState.filter.name + '\'</strong>';
 
             function wrapInContainer(children) {
                 return '<div class="col margin-bottom--3">\n                ' + templates.searchText(searchText) + '\n                ' + children + '\n            </div>';
@@ -281,7 +281,7 @@ var render = function () {
                 HTMLParts.push(templates.datasetResultItem(data));
             });
 
-            return wrapInContainer(HTMLParts.join(''));
+            appElem.innerHTML += wrapInContainer(HTMLParts.join(''));
         }
     }, {
         key: 'areaResults',
@@ -311,7 +311,7 @@ var render = function () {
                 return index === 3;
             });
 
-            return wrapInContainer(HTMLParts.join(''));
+            appElem.innerHTML += wrapInContainer(HTMLParts.join(''));
         }
     }, {
         key: 'error',
@@ -392,6 +392,12 @@ function updateResults() {
             return false;
         }
 
+        if (state.getState().filter.id) {
+            render.datasetResults(response.results);
+            bind.areaClick();
+            return false;
+        }
+
         render.allResults(response.area_results, response.results);
         bind.areaClick();
     }).catch(function (error) {
@@ -431,7 +437,7 @@ var bind = function () {
                     }
                 });
                 var currentState = state.getState();
-                window.history.pushState({ query: currentState.query, filter: currentState.filter.id }, '', '?q=' + currentState.query + '&filter=' + currentState.filter.id);
+                window.history.pushState(state.getState(), '', '?q=' + currentState.query + '&filter=' + currentState.filter.id);
                 updateResults();
             }
         }
@@ -452,12 +458,12 @@ var bind = function () {
                 });
 
                 if (!query) {
-                    window.history.pushState({ query: query }, '', location.pathname);
+                    window.history.pushState(state.getState(), '', location.pathname);
                     updateResults();
                     return;
                 }
 
-                window.history.pushState({ query: query }, '', '?q=' + query);
+                window.history.pushState(state.getState(), '', '?q=' + query);
                 updateResults();
             });
         }
@@ -466,12 +472,10 @@ var bind = function () {
         value: function searchChange() {
 
             inputElem.addEventListener('input', function (event) {
-                var inputValue = inputElem.value;
-                fetch('https://search.discovery.onsdigital.co.uk/suggest?q=' + inputValue).then(function (response) {
-                    return response.json();
-                }).then(function (response) {
-                    console.log({ inputValue: inputValue, response: response });
-                });
+                // const inputValue = inputElem.value;
+                // fetch(`https://search.discovery.onsdigital.co.uk/suggest?q=${inputValue}`).then(response => response.json()).then(response => {
+                //     console.log({inputValue, response});
+                // });
             });
         }
     }, {
@@ -480,7 +484,19 @@ var bind = function () {
             window.onpopstate = function (event) {
                 state.updateState({
                     type: 'UPDATE_QUERY',
-                    value: event.state ? event.state.query : ''
+                    value: event.state.query
+                });
+                state.updateState({
+                    type: 'UPDATE_FILTER',
+                    value: event.state.filter
+                });
+                state.updateState({
+                    type: 'UPDATE_COUNT',
+                    value: event.state.count
+                });
+                state.updateState({
+                    type: 'UPDATE_AREA_COUNT',
+                    value: event.state.areaCount
                 });
                 updateResults();
             };
@@ -491,6 +507,9 @@ var bind = function () {
 
 /* Imports */
 function init() {
+    // const currentState = state.getState();
+    // window.history.pushState({query: currentState.query, filter: currentState.filter.id}, '', location);
+
     updateResults();
     bind.searchChange();
     bind.searchSubmit();

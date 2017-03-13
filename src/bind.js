@@ -26,7 +26,7 @@ export default class bind {
                 }
             });
             const currentState = state.getState();
-            window.history.pushState({query: currentState.query, filter: currentState.filter.id}, ``, `?q=${currentState.query}&filter=${currentState.filter.id}`);
+            window.history.pushState(state.getState(), ``, `?q=${currentState.query}&filter=${currentState.filter.id}`);
             updateResults();
         }
     }
@@ -46,12 +46,12 @@ export default class bind {
             });
 
             if (!query) {
-                window.history.pushState({query: query}, ``, location.pathname);
+                window.history.pushState(state.getState(), ``, location.pathname);
                 updateResults();
                 return;
             }
 
-            window.history.pushState({query: query}, ``, `?q=${query}`);
+            window.history.pushState(state.getState(), ``, `?q=${query}`);
             updateResults();
         });
     }
@@ -59,10 +59,10 @@ export default class bind {
     static searchChange() {
 
         inputElem.addEventListener('input', event => {
-            const inputValue = inputElem.value;
-            fetch(`https://search.discovery.onsdigital.co.uk/suggest?q=${inputValue}`).then(response => response.json()).then(response => {
-                console.log({inputValue, response});
-            });
+            // const inputValue = inputElem.value;
+            // fetch(`https://search.discovery.onsdigital.co.uk/suggest?q=${inputValue}`).then(response => response.json()).then(response => {
+            //     console.log({inputValue, response});
+            // });
         })
     }
 
@@ -70,7 +70,19 @@ export default class bind {
         window.onpopstate = event => {
             state.updateState({
                 type: 'UPDATE_QUERY',
-                value: event.state ? event.state.query : ``
+                value: event.state.query
+            });
+            state.updateState({
+                type: 'UPDATE_FILTER',
+                value: event.state.filter
+            });
+            state.updateState({
+                type: 'UPDATE_COUNT',
+                value: event.state.count
+            });
+            state.updateState({
+                type: 'UPDATE_AREA_COUNT',
+                value: event.state.areaCount
             });
             updateResults();
         }

@@ -59,6 +59,12 @@ export default function updateResults() {
             return false;
         }
 
+        if (state.getState().filter.id) {
+            render.datasetResults(response.results);
+            bind.areaClick();
+            return false;
+        }
+
         render.allResults(response.area_results, response.results);
         bind.areaClick();
     }).catch(error => {

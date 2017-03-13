@@ -11,13 +11,14 @@ export default class render {
     }
 
     static allResults(areaResults, datasetResults) {
-        appElem.innerHTML += (this.areaResults(areaResults) + this.datasetResults(datasetResults));
+        this.areaResults(areaResults);
+        this.datasetResults(datasetResults)
     }
 
     static allResultsForAreaType(resultsData) {
         const HTMLParts = [];
         const currentState = state.getState();
-        const searchText = `All <strong>'${currentState.count}'</strong> results, filtered by area type <strong>'${currentState.filter.name}'</strong>`;
+        const searchText = `All <strong>'${currentState.count}'</strong> results, filtered by <strong>'${currentState.query}'</strong> as a <strong>'${currentState.filter.name}'</strong>`;
 
         function wrapInContainer(children) {
             return (
@@ -88,7 +89,7 @@ export default class render {
             HTMLParts.push(templates.datasetResultItem(data));
         });
 
-        return wrapInContainer(HTMLParts.join(''));
+        appElem.innerHTML += wrapInContainer(HTMLParts.join(''));
     }
 
     static areaResults(resultsData) {
@@ -122,7 +123,7 @@ export default class render {
             return index === 3;
         });
 
-        return wrapInContainer(HTMLParts.join(''));
+        appElem.innerHTML += wrapInContainer(HTMLParts.join(''));
     }
 
     static error() {

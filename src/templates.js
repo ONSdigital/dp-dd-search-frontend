@@ -32,7 +32,7 @@ export default class templates {
         }
 
         if (query && filter) {
-            return wrapInContainer(`<strong>${count}</strong> results found for <strong>'${query}'</strong>, filter by area type <strong>'${filterName}'</strong>`)
+            return wrapInContainer(`<strong>${count}</strong> results found for <strong>'${query}'</strong>, filtered by area type <strong>'${filterName}'</strong>`)
         }
 
         return wrapInContainer(`<strong>${count}</strong> results found for <strong>'${query}'</strong>`);
