@@ -1,123 +1,341 @@
 'use strict';
 
-/**
- * Application variables
- */
-var hostname = location.hostname;
-var env = getEnvironmentType(hostname);
-var apiUrl = "https://search.discovery.onsdigital.co.uk"; // If this needs to point at local version on server in the future use the 'env' variable to detect whether it's the development or production build
-var appElem = document.getElementById('app');
-var searchElem = document.getElementById('search');
-var inputElem = document.getElementById('search__input');
-
-function getEnvironmentType(hostname) {
-    switch (hostname) {
-        case 'localhost':
-            {
-                return 'development';
-            }
-        case '127.0.0.1':
-            {
-                return 'development';
-            }
-        default:
-            {
-                return 'production';
-            }
-    }
-}
-
-var state = {
-    count: 0,
-    areaCount: 0,
-    query: getUrlParams().q || '',
-    filter: {
-        id: getUrlParams().filter || '',
-        name: getUrlParams().filter || ''
-    }
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
 };
 
-function getUrlParams() {
-    var queryString = location.search;
-    if (!queryString) {
-        return {};
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
+
+var utilities = function () {
+    function utilities() {
+        classCallCheck(this, utilities);
     }
 
-    var queries = queryString.split(/[\&?]+/);
-    queries.splice(0, 1);
-
-    var returnValue = {};
-    queries.forEach(function (query) {
-        var splitQuery = query.split('=');
-        try {
-            splitQuery[1] = decodeURIComponent(splitQuery[1]);
-        } catch (e) {
-            console.error(e);
+    createClass(utilities, null, [{
+        key: 'getEnvironmentType',
+        value: function getEnvironmentType(hostname) {
+            switch (hostname) {
+                case 'localhost':
+                    {
+                        return 'development';
+                    }
+                case '127.0.0.1':
+                    {
+                        return 'development';
+                    }
+                default:
+                    {
+                        return 'production';
+                    }
+            }
         }
+    }, {
+        key: 'getUrlParams',
+        value: function getUrlParams() {
+            var queryString = location.search;
+            if (!queryString) {
+                return {};
+            }
 
-        returnValue[splitQuery[0]] = splitQuery[1];
-    });
+            var queries = queryString.split(/[\&?]+/);
+            queries.splice(0, 1);
 
-    return returnValue;
-}
+            var returnValue = {};
+            queries.forEach(function (query) {
+                var splitQuery = query.split('=');
+                try {
+                    splitQuery[1] = decodeURIComponent(splitQuery[1]);
+                } catch (e) {
+                    console.error(e);
+                }
 
-/**
- * HTML components
- */
+                returnValue[splitQuery[0]] = splitQuery[1];
+            });
 
-function searchTextComponent(children) {
-    var query = state.query;
-    var count = state.count;
-    var filter = state.filter.id;
-    var filterName = state.filter.name;
+            return returnValue;
+        }
+    }]);
+    return utilities;
+}();
 
-    function wrapInContainer(children) {
-        return '<div class="border-bottom--iron-md border-bottom--iron-lg">\n                <h2 class="search-text margin-top--2 margin-bottom--2">\n                    ' + children + '\n                </h2>\n            </div>';
+var currentState = {
+    count: 0,
+    areaCount: 0,
+    query: utilities.getUrlParams().q || '',
+    filter: {
+        id: utilities.getUrlParams().filter || '',
+        name: utilities.getUrlParams().filter || ''
+    },
+    apiUrl: "https://search.discovery.onsdigital.co.uk"
+};
+
+var state = function () {
+    function state() {
+        classCallCheck(this, state);
     }
 
-    if (children) {
-        return wrapInContainer(children);
+    createClass(state, null, [{
+        key: 'getState',
+        value: function getState() {
+            return JSON.parse(JSON.stringify(currentState));
+        }
+    }, {
+        key: 'updateState',
+        value: function updateState(action) {
+            var newState = this.getState();
+            console.log('State update: \n', action);
+            switch (action.type) {
+                case 'UPDATE_COUNT':
+                    {
+                        newState.count = action.value;
+                        break;
+                    }
+                case 'UPDATE_AREA_COUNT':
+                    {
+                        newState.areaCount = action.value;
+                        break;
+                    }
+                case 'UPDATE_QUERY':
+                    {
+                        newState.query = action.value;
+                        break;
+                    }
+                case 'UPDATE_FILTER':
+                    {
+                        newState.filter = action.value;
+                        break;
+                    }
+            }
+
+            currentState = newState;
+        }
+    }]);
+    return state;
+}();
+
+var templates = function () {
+    function templates() {
+        classCallCheck(this, templates);
     }
 
-    if (query && count === 0) {
-        return wrapInContainer('No results for <strong>\'' + state.query + '\'</strong>');
+    createClass(templates, null, [{
+        key: 'searchText',
+        value: function searchText(children) {
+            var currentState = state.getState();
+            var query = currentState.query;
+            var count = currentState.count;
+            var filter = currentState.filter.id;
+            var filterName = currentState.filter.name;
+
+            function wrapInContainer(children) {
+                return '<div class="border-bottom--iron-md border-bottom--iron-lg">\n                <h2 class="search-text margin-top--2 margin-bottom--2">\n                    ' + children + '\n                </h2>\n            </div>';
+            }
+
+            if (children) {
+                return wrapInContainer(children);
+            }
+
+            if (query && count === 0) {
+                return wrapInContainer('No results for <strong>\'' + currentState.query + '\'</strong>');
+            }
+
+            if (!query) {
+                return wrapInContainer('No search query, showing all <strong>\'' + count + '\'</strong> results');
+            }
+
+            if (query && filter) {
+                return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>, filter by area type <strong>\'' + filterName + '\'</strong>');
+            }
+
+            return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>');
+        }
+    }, {
+        key: 'areaSearchText',
+        value: function areaSearchText() {
+            var currentState = state.getState();
+            var query = currentState.query;
+            var count = currentState.areaCount;
+
+            function wrapInContainer(children) {
+                return '<div class="col">\n                <h2 class="search-text margin-top--2 margin-bottom--2">\n                    ' + children + '\n                </h2>\n            </div>';
+            }
+
+            return wrapInContainer('\n        Showing the top <strong>' + (count > 4 ? '4' : count) + '</strong> suggested location' + (count > 1 ? 's' : '') + (query ? ' for <strong>\'' + query + '\'</strong>' : '') + '.\n        <a href="">View all</a>\n    ');
+        }
+    }, {
+        key: 'datasetResultItem',
+        value: function datasetResultItem(data) {
+            return '<div class="result border-bottom--iron-md border-bottom--iron-lg">\n            <h3 class="result__title"><a href="">' + data.title + '</a></h3>\n            <div class="result__description">' + data.description + '</div>\n            <span class="result__metadata">' + data.type + '</span>\n            <span class="result__metadata">Released on ' + data.releaseDate + '</span>\n        </div>';
+        }
+    }, {
+        key: 'areaResultItem',
+        value: function areaResultItem(data) {
+            return '<div class="col col--lg-half background--iron-light margin-bottom--2 padding-top--2 padding-right--1 padding-bottom--2 padding-left--1">\n            <span class="baseline">' + data.type + '</span>\n            <span class="icon icon-arrow-right--dark float-right margin-top--1"></span>\n            <h3 class="flush">\n                <a class="area-link" href="/?q=' + state.query + '&filter=' + data.type_id + '" data-filter="' + data.type_id + '" data-filter-name="' + data.type + '">\n                    ' + data.title + '\n                </a>\n            </h3>\n        </div>\n        ';
+        }
+    }]);
+    return templates;
+}();
+
+var appElem = document.getElementById('app');
+var _title = document.getElementById('title');
+
+var render = function () {
+    function render() {
+        classCallCheck(this, render);
     }
 
-    if (!query) {
-        return wrapInContainer('No search query, showing all <strong>\'' + count + '\'</strong> results');
-    }
+    createClass(render, null, [{
+        key: 'emptyResults',
+        value: function emptyResults() {
+            while (appElem.firstChild) {
+                appElem.removeChild(appElem.firstChild);
+            }
+        }
+    }, {
+        key: 'allResults',
+        value: function allResults(areaResults, datasetResults) {
+            appElem.innerHTML += this.areaResults(areaResults) + this.datasetResults(datasetResults);
+        }
+    }, {
+        key: 'allResultsForAreaType',
+        value: function allResultsForAreaType(resultsData) {
+            var HTMLParts = [];
+            var currentState = state.getState();
+            var searchText = 'All <strong>\'' + currentState.count + '\'</strong> results, filtered by area type <strong>\'' + currentState.filter.name + '\'</strong>';
 
-    if (query && filter) {
-        return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>, filter by area type <strong>\'' + filterName + '\'</strong>');
-    }
+            function wrapInContainer(children) {
+                return '<div class="col margin-bottom--3">\n                ' + templates.searchText(searchText) + '\n                ' + children + '\n            </div>';
+            }
 
-    return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>');
-}
+            resultsData.map(function (result) {
+                var date = result.body.metadata.release_date.split('+');
 
-function areaSearchTextComponent() {
-    var query = state.query;
-    var count = state.areaCount;
+                // Check for invalid date
+                if (date[1]) {
+                    date.pop();
+                    date.push('Z');
+                    date = date.join('');
+                }
 
-    function wrapInContainer(children) {
-        return '<div class="col">\n                <h2 class="search-text margin-top--2 margin-bottom--2">\n                    ' + children + '\n                </h2>\n            </div>';
-    }
+                var data = {
+                    title: result.body.title,
+                    description: result.body.metadata.description,
+                    type: result.type,
+                    releaseDate: new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                };
 
-    return wrapInContainer('\n        Showing the top <strong>' + (count > 4 ? '4' : count) + '</strong> suggested location' + (count > 1 ? 's' : '') + (query ? ' for <strong>\'' + query + '\'</strong>' : '') + '.\n        <a href="">View all</a>\n    ');
-}
+                HTMLParts.push(templates.datasetResultItem(data));
+            });
 
-function resultItemComponent(data) {
-    return '<div class="result border-bottom--iron-md border-bottom--iron-lg">\n            <h3 class="result__title"><a href="">' + data.title + '</a></h3>\n            <div class="result__description">' + data.description + '</div>\n            <span class="result__metadata">' + data.type + '</span>\n            <span class="result__metadata">Released on ' + data.releaseDate + '</span>\n        </div>';
-}
+            appElem.innerHTML += wrapInContainer(HTMLParts.join(''));
+        }
+    }, {
+        key: 'datasetResults',
+        value: function datasetResults(resultsData) {
+            var HTMLParts = [];
+            var count = state.getState().count;
 
-function areaResultItemComponent(data) {
-    return '<div class="col col--lg-half background--iron-light margin-bottom--2 padding-top--2 padding-right--1 padding-bottom--2 padding-left--1">\n            <span class="baseline">' + data.type + '</span>\n            <span class="icon icon-arrow-right--dark float-right margin-top--1"></span>\n            <h3 class="flush">\n                <a class="area-link" href="/?q=' + state.query + '&filter=' + data.type_id + '" data-filter="' + data.type_id + '" data-filter-name="' + data.type + '">\n                    ' + data.title + '\n                </a>\n            </h3>\n        </div>\n        ';
-}
+            if (count === 0) {
+                return wrapInContainer('');
+            }
 
-/**
- * View and data logic
- */
+            function wrapInContainer(children) {
+                return '<div class="col margin-bottom--3">\n                ' + templates.searchText() + '\n                ' + children + '\n            </div>';
+            }
+
+            resultsData.map(function (result) {
+                var date = result.body.metadata.release_date.split('+');
+
+                // Check for invalid date
+                if (date[1]) {
+                    date.pop();
+                    date.push('Z');
+                    date = date.join('');
+                }
+
+                var data = {
+                    title: result.body.title,
+                    description: result.body.metadata.description,
+                    type: result.type,
+                    releaseDate: new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                };
+
+                HTMLParts.push(templates.datasetResultItem(data));
+            });
+
+            return wrapInContainer(HTMLParts.join(''));
+        }
+    }, {
+        key: 'areaResults',
+        value: function areaResults(resultsData) {
+            var HTMLParts = [];
+            var currentState = state.getState();
+            var count = currentState.areaCount;
+            var query = currentState.query;
+
+            if (count === 0 || !query) {
+                return '';
+            }
+
+            function wrapInContainer(children) {
+                return '<div style="width: 100%;" class="float-left border-bottom--iron-md border-bottom--iron-lg padding-bottom--2">\n                ' + templates.areaSearchText() + '\n                ' + children + '\n            </div>';
+            }
+
+            resultsData.some(function (result, index) {
+                var data = {
+                    title: result.body.title,
+                    type: result.body.type,
+                    type_id: result.body.type_id
+                };
+
+                HTMLParts.push(templates.areaResultItem(data));
+
+                return index === 3;
+            });
+
+            return wrapInContainer(HTMLParts.join(''));
+        }
+    }, {
+        key: 'error',
+        value: function error() {
+            appElem.innerHTML += '\n            <div class="col">\n                <h2>Oops, there\'s been an error</h2>\n                <p class="margin-top--2 margin-bottom--0">There was an issue getting your results.</p>\n                <p class="flush">Please try again in a few moments.</p>\n            </div>\n        ';
+        }
+    }, {
+        key: 'title',
+        value: function title(query) {
+            if (query) {
+                _title.innerHTML = query + ' - Search - Office for National Statistics';
+            } else {
+                _title.innerHTML = 'Search - Office for National Statistics';
+            }
+        }
+    }]);
+    return render;
+}();
+
+var inputElem$1 = document.getElementById('search__input');
 
 function updateResults() {
+
+    var currentState = state.getState();
 
     // Fetch polyfill
     if (!window.fetch) {
@@ -134,196 +352,150 @@ function updateResults() {
         return;
     }
 
-    if (state.query !== inputElem.value) {
-        console.log('Fetching results for "%s"', state.query);
-        inputElem.value = state.query;
+    if (currentState.query !== inputElem$1.value) {
+        console.log('Fetching results for "%s"', currentState.query);
+        inputElem$1.value = currentState.query;
     }
 
-    if (state.query) {
-        document.getElementById('title').innerHTML = state.query + ' - Search - Office for National Statistics';
-    } else {
-        document.getElementById('title').innerHTML = 'Search - Office for National Statistics';
-    }
+    render.title(currentState.query);
 
-    fetch(apiUrl + '/search?q=' + state.query + '&filter=' + state.filter.id).then(function (response) {
+    fetch(currentState.apiUrl + '/search?q=' + currentState.query + '&filter=' + currentState.filter.id).then(function (response) {
         return response.json();
     }).then(function (response) {
-        state.count = response.total_results;
-        state.areaCount = response.area_results ? response.area_results.length : 0;
+        state.updateState({
+            type: 'UPDATE_COUNT',
+            value: response.total_results
+        });
+        state.updateState({
+            type: 'UPDATE_AREA_COUNT',
+            value: response.area_results ? response.area_results.length : 0
+        });
 
-        // Remove current results
-        while (appElem.firstChild) {
-            appElem.removeChild(appElem.firstChild);
-        }if (state.filter.id && state.count === 0) {
-            console.log('Display all results for ' + state.filter.name);
-            fetch(apiUrl + '/search?filter=' + state.filter.id).then(function (response) {
+        render.emptyResults();
+
+        if (state.getState().filter.id && state.getState().count === 0) {
+            console.log('Display all results for ' + state.getState().filter.name);
+            fetch(state.getState().apiUrl + '/search?filter=' + state.getState().filter.id).then(function (response) {
                 return response.json();
             }).then(function (response) {
-                state.count = response.total_results;
-                state.areaCount = response.area_results ? response.area_results.length : 0;
-                appElem.innerHTML += buildAllResultForAreaType(response.results);
-                bindAreaClick();
+                state.updateState({
+                    type: 'UPDATE_COUNT',
+                    value: response.total_results
+                });
+                state.updateState({
+                    type: 'UPDATE_AREA_COUNT',
+                    value: response.area_results ? response.area_results.length : 0
+                });
+                render.allResultsForAreaType(response.results);
+                bind.areaClick();
             });
             return false;
         }
 
-        appElem.innerHTML += buildAreaResults(response.area_results) + buildResults(response.results);
-        bindAreaClick();
+        render.allResults(response.area_results, response.results);
+        bind.areaClick();
     }).catch(function (error) {
-        console.log('Error getting results data \n' + error);
-        while (appElem.firstChild) {
-            appElem.removeChild(appElem.firstChild);
-        }appElem.innerHTML += '\n            <div class="col">\n                <h2>Oops, there\'s been an error</h2>\n                <p class="margin-top--2 margin-bottom--0">There was an issue getting your results.</p>\n                <p class="flush">Please try again in a few moments.</p>\n            </div>\n        ';
+        console.log('Error getting results data \n', error);
+        render.emptyResults();
+        render.error();
     });
 }
 
-function buildAllResultForAreaType(resultsData) {
-    var HTMLParts = [];
-    var searchText = 'All <strong>\'' + state.count + '\'</strong> results, filtered by area type <strong>\'' + state.filter.name + '\'</strong>';
+var inputElem = document.getElementById('search__input');
+var searchElem = document.getElementById('search');
 
-    function wrapInContainer(children) {
-        return '<div class="col margin-bottom--3">\n                ' + searchTextComponent(searchText) + '\n                ' + children + '\n            </div>';
+var bind = function () {
+    function bind() {
+        classCallCheck(this, bind);
     }
 
-    resultsData.map(function (result) {
-        var date = result.body.metadata.release_date.split('+');
+    createClass(bind, null, [{
+        key: 'areaClick',
+        value: function areaClick() {
 
-        // Check for invalid date
-        if (date[1]) {
-            date.pop();
-            date.push('Z');
-            date = date.join('');
+            var areaLinks = document.querySelectorAll('.area-link');
+
+            areaLinks.forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    handleClick(event);
+                });
+            });
+
+            function handleClick(event) {
+                event.preventDefault();
+                state.updateState({
+                    type: 'UPDATE_FILTER',
+                    value: {
+                        id: event.target.getAttribute('data-filter'),
+                        name: event.target.getAttribute('data-filter-name')
+                    }
+                });
+                var currentState = state.getState();
+                window.history.pushState({ query: currentState.query, filter: currentState.filter.id }, '', '?q=' + currentState.query + '&filter=' + currentState.filter.id);
+                updateResults();
+            }
         }
+    }, {
+        key: 'searchSubmit',
+        value: function searchSubmit() {
 
-        var data = {
-            title: result.body.title,
-            description: result.body.metadata.description,
-            type: result.type,
-            releaseDate: new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-        };
+            searchElem.addEventListener('submit', function (event) {
+                var query = inputElem.value;
+                event.preventDefault();
+                state.updateState({
+                    type: 'UPDATE_QUERY',
+                    value: query
+                });
+                state.updateState({
+                    type: 'UPDATE_FILTER',
+                    value: { id: "", name: "" }
+                });
 
-        HTMLParts.push(resultItemComponent(data));
-    });
+                if (!query) {
+                    window.history.pushState({ query: query }, '', location.pathname);
+                    updateResults();
+                    return;
+                }
 
-    return wrapInContainer(HTMLParts.join(''));
-}
-
-function buildResults(resultsData) {
-    var HTMLParts = [];
-    var count = state.count;
-
-    if (count === 0) {
-        return wrapInContainer('');
-    }
-
-    function wrapInContainer(children) {
-        return '<div class="col margin-bottom--3">\n                ' + searchTextComponent() + '\n                ' + children + '\n            </div>';
-    }
-
-    resultsData.map(function (result) {
-        var date = result.body.metadata.release_date.split('+');
-
-        // Check for invalid date
-        if (date[1]) {
-            date.pop();
-            date.push('Z');
-            date = date.join('');
+                window.history.pushState({ query: query }, '', '?q=' + query);
+                updateResults();
+            });
         }
+    }, {
+        key: 'searchChange',
+        value: function searchChange() {
 
-        var data = {
-            title: result.body.title,
-            description: result.body.metadata.description,
-            type: result.type,
-            releaseDate: new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-        };
-
-        HTMLParts.push(resultItemComponent(data));
-    });
-
-    return wrapInContainer(HTMLParts.join(''));
-}
-
-function buildAreaResults(resultsData) {
-    var HTMLParts = [];
-    var count = state.areaCount;
-    var query = state.query;
-
-    if (count === 0 || !query) {
-        return '';
-    }
-
-    function wrapInContainer(children) {
-        return '<div style="width: 100%;" class="float-left border-bottom--iron-md border-bottom--iron-lg padding-bottom--2">\n                ' + areaSearchTextComponent() + '\n                ' + children + '\n            </div>';
-    }
-
-    resultsData.some(function (result, index) {
-        var data = {
-            title: result.body.title,
-            type: result.body.type,
-            type_id: result.body.type_id
-        };
-
-        HTMLParts.push(areaResultItemComponent(data));
-
-        return index === 3;
-    });
-
-    return wrapInContainer(HTMLParts.join(''));
-}
-
-function bindAreaClick() {
-
-    var areaLinks = document.querySelectorAll('.area-link');
-
-    areaLinks.forEach(function (link) {
-        link.addEventListener('click', function (event) {
-            handleClick(event);
-        });
-    });
-
-    function handleClick(event) {
-        event.preventDefault();
-        state.filter.id = event.target.getAttribute('data-filter');
-        state.filter.name = event.target.getAttribute('data-filter-name');
-        window.history.pushState({ query: state.query, filter: state.filter.id }, '', '?q=' + state.query + '&filter=' + state.filter.id);
-        updateResults();
-    }
-}
-
-function bindSearchSubmit() {
-
-    searchElem.addEventListener('submit', function (event) {
-        var query = inputElem.value;
-        event.preventDefault();
-        state.query = query;
-        state.filter = { id: "", name: "" };
-
-        if (!query) {
-            window.history.pushState({ query: query }, '', location.pathname);
-            updateResults();
-            return;
+            inputElem.addEventListener('input', function (event) {
+                var inputValue = inputElem.value;
+                fetch('https://search.discovery.onsdigital.co.uk/suggest?q=' + inputValue).then(function (response) {
+                    return response.json();
+                }).then(function (response) {
+                    console.log({ inputValue: inputValue, response: response });
+                });
+            });
         }
-
-        window.history.pushState({ query: query }, '', '?q=' + query);
-        updateResults();
-    });
-}
-
-function bindHistoryState() {
-    window.onpopstate = function (event) {
-        if (event.state) {
-            state.query = event.state.query;
-        } else {
-            state.query = '';
+    }, {
+        key: 'historyState',
+        value: function historyState() {
+            window.onpopstate = function (event) {
+                state.updateState({
+                    type: 'UPDATE_QUERY',
+                    value: event.state ? event.state.query : ''
+                });
+                updateResults();
+            };
         }
-        updateResults();
-    };
-}
+    }]);
+    return bind;
+}();
 
+/* Imports */
 function init() {
     updateResults();
-    bindSearchSubmit();
-    bindHistoryState();
+    bind.searchChange();
+    bind.searchSubmit();
+    bind.historyState();
 }
 
 init();
+//# sourceMappingURL=main.js.map
