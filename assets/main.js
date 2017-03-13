@@ -196,6 +196,7 @@ var templates = function () {
 
 var appElem = document.getElementById('app');
 var _title = document.getElementById('title');
+var typeahead$1 = document.getElementById('typeahead');
 
 var render = function () {
     function render() {
@@ -203,6 +204,21 @@ var render = function () {
     }
 
     createClass(render, null, [{
+        key: 'querySuggestions',
+        value: function querySuggestions(suggestions) {
+            this.emptyQuerySuggestions();
+            typeahead$1.innerHTML = '<ul class="typeahead__list"><li class="typeahead__item">' + suggestions.join('</li><li class="typeahead__item">') + '</li></ul>';
+            typeahead$1.style.display = 'block';
+            bind.typeaheadArrowKeys();
+        }
+    }, {
+        key: 'emptyQuerySuggestions',
+        value: function emptyQuerySuggestions() {
+            while (typeahead$1.firstChild) {
+                typeahead$1.removeChild(typeahead$1.firstChild);
+            }
+        }
+    }, {
         key: 'emptyResults',
         value: function emptyResults() {
             while (appElem.firstChild) {
@@ -403,6 +419,7 @@ function updateResults() {
 
 var inputElem = document.getElementById('search__input');
 var searchElem = document.getElementById('search');
+var typeahead = document.getElementById('typeahead');
 
 var bind = function () {
     function bind() {
@@ -436,6 +453,30 @@ var bind = function () {
             }
         }
     }, {
+        key: 'typeaheadArrowKeys',
+        value: function typeaheadArrowKeys() {
+            searchElem.addEventListener('keypress', function (event) {
+                var keyCode = event.keyCode;
+                var upKey = '38';
+                var downKey = '40';
+
+                if (keyCode !== upKey || keyCode !== downKey) {
+                    return;
+                }
+
+                var suggestions = document.getElementsByClass('typeahead__item');
+                var focusIndex = -1; // Default position of no suggestions being focused on
+            });
+        }
+    }, {
+        key: 'searchFocus',
+        value: function searchFocus() {
+            searchElem.addEventListener('focusout', function () {
+                typeahead.style.display = 'none';
+                render.emptyQuerySuggestions();
+            });
+        }
+    }, {
         key: 'searchSubmit',
         value: function searchSubmit() {
 
@@ -464,14 +505,25 @@ var bind = function () {
     }, {
         key: 'searchChange',
         value: function searchChange() {
+            var inputTimer = void 0;
 
             inputElem.addEventListener('input', function (event) {
-                var inputValue = inputElem.value;
-                fetch('https://search.discovery.onsdigital.co.uk/suggest?q=' + inputValue).then(function (response) {
-                    return response.json();
-                }).then(function (response) {
-                    console.log({ inputValue: inputValue, response: response });
-                });
+                var inputValue = event.target.value;
+
+                clearTimeout(inputTimer);
+                inputTimer = setTimeout(function () {
+                    fetch(state.getState().apiUrl + '/suggest?q=' + inputValue).then(function (response) {
+                        return response.json();
+                    }).then(function (response) {
+                        if (response.total_results === 0) {
+                            return;
+                        }
+                        var suggestions = response.results.map(function (result) {
+                            return result.body.title;
+                        });
+                        render.querySuggestions(suggestions);
+                    });
+                }, 100);
             });
         }
     }, {
@@ -492,6 +544,8 @@ var bind = function () {
 /* Imports */
 function init() {
     updateResults();
+    bind.typeaheadArrowKeys();
+    bind.searchFocus();
     bind.searchChange();
     bind.searchSubmit();
     bind.historyState();

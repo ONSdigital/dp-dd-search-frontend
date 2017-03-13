@@ -1,4 +1,8 @@
 /** Styles that over-ride or extend the sixteens main.css **/
+.search {
+    position: relative;
+    overflow: visible;
+}
 .search__input {
     background: #ffffff;
 }
@@ -11,6 +15,34 @@ body {
 }
 main {
     flex: 1;
+}
+
+/* Search autocomplete/typeahad */
+#typeahead {
+    display: none;
+    position: absolute;
+    background: white;
+    max-height: 320px;
+    overflow: scroll;
+    top: 64px;
+    padding-bottom: 16px;
+    border: 1px solid #58595B;
+}
+
+.typeahead__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.typeahead__item {
+    margin: 0;
+    padding: 16px;
+}
+
+.typeahead__item:hover, .typeahead__item.focused {
+    cursor: pointer;
+    background: #E5E6E7;
 }
 
 /* Other stuff */
