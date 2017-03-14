@@ -9,6 +9,9 @@ export default class render {
 
     static querySuggestions(suggestions) {
         this.emptyQuerySuggestions();
+        if (!suggestions) {
+            return;
+        }
         typeahead.innerHTML = '<ul class="typeahead__list"><li class="typeahead__item">' + suggestions.join('</li><li class="typeahead__item">') + '</li></ul>';
         typeahead.style.display = 'block';
     }

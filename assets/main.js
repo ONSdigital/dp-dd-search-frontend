@@ -100,6 +100,9 @@ var render = function () {
         key: 'querySuggestions',
         value: function querySuggestions(suggestions) {
             this.emptyQuerySuggestions();
+            if (!suggestions) {
+                return;
+            }
             typeahead$2.innerHTML = '<ul class="typeahead__list"><li class="typeahead__item">' + suggestions.join('</li><li class="typeahead__item">') + '</li></ul>';
             typeahead$2.style.display = 'block';
         }
