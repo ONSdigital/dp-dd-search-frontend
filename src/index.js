@@ -1,11 +1,11 @@
 /* Imports */
 import bind from './bind';
-import updateResults from './updateResults';
+import updateResults from './updateResults'
 
 /* Initialise application */
 function init() {
     updateResults();
-    bind.typeaheadArrowKeys();
+    bind.typeaheadKeys();
     bind.searchFocus();
     bind.searchChange();
     bind.searchSubmit();

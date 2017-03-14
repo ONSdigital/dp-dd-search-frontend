@@ -1,6 +1,5 @@
 import state from './state';
 import templates from './templates';
-import bind from './bind';
 
 const appElem = document.getElementById('app');
 const title = document.getElementById('title');
@@ -12,7 +11,6 @@ export default class render {
         this.emptyQuerySuggestions();
         typeahead.innerHTML = '<ul class="typeahead__list"><li class="typeahead__item">' + suggestions.join('</li><li class="typeahead__item">') + '</li></ul>';
         typeahead.style.display = 'block';
-        bind.typeaheadArrowKeys();
     }
 
     static emptyQuerySuggestions() {
@@ -24,13 +22,14 @@ export default class render {
     }
 
     static allResults(areaResults, datasetResults) {
-        appElem.innerHTML += (this.areaResults(areaResults) + this.datasetResults(datasetResults));
+        this.areaResults(areaResults);
+        this.datasetResults(datasetResults)
     }
 
     static allResultsForAreaType(resultsData) {
         const HTMLParts = [];
         const currentState = state.getState();
-        const searchText = `All <strong>'${currentState.count}'</strong> results, filtered by area type <strong>'${currentState.filter.name}'</strong>`;
+        const searchText = `All <strong>'${currentState.count}'</strong> results, filtered by <strong>'${currentState.query}'</strong> as a <strong>'${currentState.filter.name}'</strong>`;
 
         function wrapInContainer(children) {
             return (
@@ -101,7 +100,7 @@ export default class render {
             HTMLParts.push(templates.datasetResultItem(data));
         });
 
-        return wrapInContainer(HTMLParts.join(''));
+        appElem.innerHTML += wrapInContainer(HTMLParts.join(''));
     }
 
     static areaResults(resultsData) {
@@ -135,7 +134,7 @@ export default class render {
             return index === 3;
         });
 
-        return wrapInContainer(HTMLParts.join(''));
+        appElem.innerHTML += wrapInContainer(HTMLParts.join(''));
     }
 
     static error() {

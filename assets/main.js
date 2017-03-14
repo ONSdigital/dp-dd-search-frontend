@@ -101,7 +101,6 @@ var state = function () {
         key: 'updateState',
         value: function updateState(action) {
             var newState = this.getState();
-            console.log('State update: \n', action);
             switch (action.type) {
                 case 'UPDATE_COUNT':
                     {
@@ -162,7 +161,7 @@ var templates = function () {
             }
 
             if (query && filter) {
-                return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>, filter by area type <strong>\'' + filterName + '\'</strong>');
+                return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>, filtered by area type <strong>\'' + filterName + '\'</strong>');
             }
 
             return wrapInContainer('<strong>' + count + '</strong> results found for <strong>\'' + query + '\'</strong>');
@@ -209,7 +208,6 @@ var render = function () {
             this.emptyQuerySuggestions();
             typeahead$1.innerHTML = '<ul class="typeahead__list"><li class="typeahead__item">' + suggestions.join('</li><li class="typeahead__item">') + '</li></ul>';
             typeahead$1.style.display = 'block';
-            bind.typeaheadArrowKeys();
         }
     }, {
         key: 'emptyQuerySuggestions',
@@ -228,14 +226,15 @@ var render = function () {
     }, {
         key: 'allResults',
         value: function allResults(areaResults, datasetResults) {
-            appElem.innerHTML += this.areaResults(areaResults) + this.datasetResults(datasetResults);
+            this.areaResults(areaResults);
+            this.datasetResults(datasetResults);
         }
     }, {
         key: 'allResultsForAreaType',
         value: function allResultsForAreaType(resultsData) {
             var HTMLParts = [];
             var currentState = state.getState();
-            var searchText = 'All <strong>\'' + currentState.count + '\'</strong> results, filtered by area type <strong>\'' + currentState.filter.name + '\'</strong>';
+            var searchText = 'All <strong>\'' + currentState.count + '\'</strong> results, filtered by <strong>\'' + currentState.query + '\'</strong> as a <strong>\'' + currentState.filter.name + '\'</strong>';
 
             function wrapInContainer(children) {
                 return '<div class="col margin-bottom--3">\n                ' + templates.searchText(searchText) + '\n                ' + children + '\n            </div>';
@@ -297,7 +296,7 @@ var render = function () {
                 HTMLParts.push(templates.datasetResultItem(data));
             });
 
-            return wrapInContainer(HTMLParts.join(''));
+            appElem.innerHTML += wrapInContainer(HTMLParts.join(''));
         }
     }, {
         key: 'areaResults',
@@ -327,7 +326,7 @@ var render = function () {
                 return index === 3;
             });
 
-            return wrapInContainer(HTMLParts.join(''));
+            appElem.innerHTML += wrapInContainer(HTMLParts.join(''));
         }
     }, {
         key: 'error',
@@ -408,6 +407,12 @@ function updateResults() {
             return false;
         }
 
+        if (state.getState().filter.id) {
+            render.datasetResults(response.results);
+            bind.areaClick();
+            return false;
+        }
+
         render.allResults(response.area_results, response.results);
         bind.areaClick();
     }).catch(function (error) {
@@ -448,25 +453,95 @@ var bind = function () {
                     }
                 });
                 var currentState = state.getState();
-                window.history.pushState({ query: currentState.query, filter: currentState.filter.id }, '', '?q=' + currentState.query + '&filter=' + currentState.filter.id);
+                window.history.pushState(state.getState(), '', '?q=' + currentState.query + '&filter=' + currentState.filter.id);
                 updateResults();
             }
         }
     }, {
-        key: 'typeaheadArrowKeys',
-        value: function typeaheadArrowKeys() {
-            searchElem.addEventListener('keypress', function (event) {
+        key: 'typeaheadKeys',
+        value: function typeaheadKeys() {
+            searchElem.addEventListener('keydown', function (event) {
                 var keyCode = event.keyCode;
-                var upKey = '38';
-                var downKey = '40';
+                var upKey = 38;
+                var downKey = 40;
+                var escKey = 27;
 
-                if (keyCode !== upKey || keyCode !== downKey) {
+                if (keyCode !== upKey && keyCode !== downKey && keyCode !== escKey) {
                     return;
                 }
 
-                var suggestions = document.getElementsByClass('typeahead__item');
-                var focusIndex = -1; // Default position of no suggestions being focused on
+                event.preventDefault();
+
+                if (keyCode === escKey && typeahead.childNodes.length !== 0) {
+                    console.log('Close suggestions');
+                    typeahead.style.display = 'none';
+                    render.emptyQuerySuggestions();
+                    return;
+                }
+
+                var suggestions = document.querySelectorAll('.typeahead__item');
+                var focusIndex = getFocusIndex(suggestions) !== undefined ? getFocusIndex(suggestions) : -1;
+
+                if (keyCode === downKey && focusIndex === -1 && typeahead.childNodes.length === 0) {
+                    //TODO get suggestions on down arrow here
+                    console.log('Get suggestions');
+                }
+
+                // Don't do anything for upkey if we're focused on the input
+                if (focusIndex === -1 && keyCode === upKey) {
+                    return;
+                }
+
+                // Stop focus from attempting to go more than size of suggestions
+                if (focusIndex >= suggestions.length - 1 && keyCode === downKey) {
+                    return false;
+                }
+
+                // Stop focus trying to go to negative numbers
+                if (focusIndex === 0 && keyCode === upKey) {
+                    console.log('First entry');
+                    return false;
+                }
+
+                // Remove class from focused suggestion
+                if (focusIndex !== -1) {
+                    suggestions[focusIndex].classList.remove('focused');
+                }
+
+                // Edit focus index according to direction of arrow keys
+                if (keyCode === downKey) {
+                    focusIndex++;
+                }
+                if (keyCode === upKey) {
+                    focusIndex--;
+                }
+
+                // Make sure next suggestion is in view, if not scroll into view
+                var suggestionRect = suggestions[focusIndex].getBoundingClientRect();
+                var containerRect = typeahead.getBoundingClientRect();
+                var bottomDiff = suggestionRect.bottom - containerRect.bottom;
+                var topDiff = suggestionRect.top - containerRect.top;
+                if (bottomDiff > 0) {
+                    typeahead.scrollTop = typeahead.scrollTop + bottomDiff;
+                }
+                if (topDiff < 0) {
+                    typeahead.scrollTop = typeahead.scrollTop + topDiff;
+                }
+
+                // Add focus class to next suggestion and update input value
+                suggestions[focusIndex].classList.add('focused');
+                inputElem.value = suggestions[focusIndex].textContent;
             });
+
+            function getFocusIndex(suggestions) {
+                var response = void 0;
+                suggestions.forEach(function (suggestion, index) {
+                    if (suggestion.classList.contains('focused')) {
+                        response = index;
+                    }
+                });
+                return response;
+            }
         }
     }, {
         key: 'searchFocus',
@@ -493,12 +568,12 @@ var bind = function () {
                 });
 
                 if (!query) {
-                    window.history.pushState({ query: query }, '', location.pathname);
+                    window.history.pushState(state.getState(), '', location.pathname);
                     updateResults();
                     return;
                 }
 
-                window.history.pushState({ query: query }, '', '?q=' + query);
+                window.history.pushState(state.getState(), '', '?q=' + query);
                 updateResults();
             });
         }
@@ -532,7 +607,19 @@ var bind = function () {
             window.onpopstate = function (event) {
                 state.updateState({
                     type: 'UPDATE_QUERY',
-                    value: event.state ? event.state.query : ''
+                    value: event.state.query
+                });
+                state.updateState({
+                    type: 'UPDATE_FILTER',
+                    value: event.state.filter
+                });
+                state.updateState({
+                    type: 'UPDATE_COUNT',
+                    value: event.state.count
+                });
+                state.updateState({
+                    type: 'UPDATE_AREA_COUNT',
+                    value: event.state.areaCount
                 });
                 updateResults();
             };
@@ -544,7 +631,7 @@ var bind = function () {
 /* Imports */
 function init() {
     updateResults();
-    bind.typeaheadArrowKeys();
+    bind.typeaheadKeys();
     bind.searchFocus();
     bind.searchChange();
     bind.searchSubmit();

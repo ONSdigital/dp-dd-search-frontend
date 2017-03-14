@@ -19,7 +19,6 @@ export default class state {
 
     static updateState(action) {
         const newState = this.getState();
-        console.log(`State update: \n`, action);
         switch (action.type) {
             case ('UPDATE_COUNT'): {
                 newState.count = action.value;
