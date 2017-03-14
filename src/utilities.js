@@ -1,3 +1,5 @@
+import state from './state';
+import render from './render';
 
 export default class utilities {
 
@@ -40,5 +42,18 @@ export default class utilities {
         });
 
         return returnValue;
+    }
+
+    static getSuggestions(query) {
+        return fetch(`${state.getState().apiUrl}/suggest?q=${query}`).then(response => response.json()).then(response => {
+            if (response.total_results === 0) {
+                typeahead.style.display = 'none';
+                render.emptyQuerySuggestions();
+                return;
+            }
+            return response.results.map(result => {
+                return result.body.title;
+            });
+        });
     }
 }

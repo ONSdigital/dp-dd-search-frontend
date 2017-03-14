@@ -24,112 +24,6 @@ var createClass = function () {
   };
 }();
 
-var utilities = function () {
-    function utilities() {
-        classCallCheck(this, utilities);
-    }
-
-    createClass(utilities, null, [{
-        key: 'getEnvironmentType',
-        value: function getEnvironmentType(hostname) {
-            switch (hostname) {
-                case 'localhost':
-                    {
-                        return 'development';
-                    }
-                case '127.0.0.1':
-                    {
-                        return 'development';
-                    }
-                default:
-                    {
-                        return 'production';
-                    }
-            }
-        }
-    }, {
-        key: 'getUrlParams',
-        value: function getUrlParams() {
-            var queryString = location.search;
-            if (!queryString) {
-                return {};
-            }
-
-            var queries = queryString.split(/[\&?]+/);
-            queries.splice(0, 1);
-
-            var returnValue = {};
-            queries.forEach(function (query) {
-                var splitQuery = query.split('=');
-                try {
-                    splitQuery[1] = decodeURIComponent(splitQuery[1]);
-                } catch (e) {
-                    console.error(e);
-                }
-
-                returnValue[splitQuery[0]] = splitQuery[1];
-            });
-
-            return returnValue;
-        }
-    }]);
-    return utilities;
-}();
-
-var currentState = {
-    count: 0,
-    areaCount: 0,
-    query: utilities.getUrlParams().q || '',
-    filter: {
-        id: utilities.getUrlParams().filter || '',
-        name: utilities.getUrlParams().filter || ''
-    },
-    apiUrl: "https://search.discovery.onsdigital.co.uk"
-};
-
-var state = function () {
-    function state() {
-        classCallCheck(this, state);
-    }
-
-    createClass(state, null, [{
-        key: 'getState',
-        value: function getState() {
-            return JSON.parse(JSON.stringify(currentState));
-        }
-    }, {
-        key: 'updateState',
-        value: function updateState(action) {
-            var newState = this.getState();
-            switch (action.type) {
-                case 'UPDATE_COUNT':
-                    {
-                        newState.count = action.value;
-                        break;
-                    }
-                case 'UPDATE_AREA_COUNT':
-                    {
-                        newState.areaCount = action.value;
-                        break;
-                    }
-                case 'UPDATE_QUERY':
-                    {
-                        newState.query = action.value;
-                        break;
-                    }
-                case 'UPDATE_FILTER':
-                    {
-                        newState.filter = action.value;
-                        break;
-                    }
-            }
-
-            currentState = newState;
-        }
-    }]);
-    return state;
-}();
-
 var templates = function () {
     function templates() {
         classCallCheck(this, templates);
@@ -195,6 +89,7 @@ var templates = function () {
 
 var appElem = document.getElementById('app');
 var _title = document.getElementById('title');
+var typeahead$2 = document.getElementById('typeahead');
 
 var render = function () {
     function render() {
@@ -202,6 +97,23 @@ var render = function () {
     }
 
     createClass(render, null, [{
+        key: 'querySuggestions',
+        value: function querySuggestions(suggestions) {
+            this.emptyQuerySuggestions();
+            if (!suggestions) {
+                return;
+            }
+            typeahead$2.innerHTML = '<ul class="typeahead__list"><li class="typeahead__item">' + suggestions.join('</li><li class="typeahead__item">') + '</li></ul>';
+            typeahead$2.style.display = 'block';
+        }
+    }, {
+        key: 'emptyQuerySuggestions',
+        value: function emptyQuerySuggestions() {
+            while (typeahead$2.firstChild) {
+                typeahead$2.removeChild(typeahead$2.firstChild);
+            }
+        }
+    }, {
         key: 'emptyResults',
         value: function emptyResults() {
             while (appElem.firstChild) {
@@ -331,6 +243,128 @@ var render = function () {
     return render;
 }();
 
+var utilities = function () {
+    function utilities() {
+        classCallCheck(this, utilities);
+    }
+
+    createClass(utilities, null, [{
+        key: 'getEnvironmentType',
+        value: function getEnvironmentType(hostname) {
+            switch (hostname) {
+                case 'localhost':
+                    {
+                        return 'development';
+                    }
+                case '127.0.0.1':
+                    {
+                        return 'development';
+                    }
+                default:
+                    {
+                        return 'production';
+                    }
+            }
+        }
+    }, {
+        key: 'getUrlParams',
+        value: function getUrlParams() {
+            var queryString = location.search;
+            if (!queryString) {
+                return {};
+            }
+
+            var queries = queryString.split(/[\&?]+/);
+            queries.splice(0, 1);
+
+            var returnValue = {};
+            queries.forEach(function (query) {
+                var splitQuery = query.split('=');
+                try {
+                    splitQuery[1] = decodeURIComponent(splitQuery[1]);
+                } catch (e) {
+                    console.error(e);
+                }
+
+                returnValue[splitQuery[0]] = splitQuery[1];
+            });
+
+            return returnValue;
+        }
+    }, {
+        key: 'getSuggestions',
+        value: function getSuggestions(query) {
+            return fetch(state.getState().apiUrl + '/suggest?q=' + query).then(function (response) {
+                return response.json();
+            }).then(function (response) {
+                if (response.total_results === 0) {
+                    typeahead.style.display = 'none';
+                    render.emptyQuerySuggestions();
+                    return;
+                }
+                return response.results.map(function (result) {
+                    return result.body.title;
+                });
+            });
+        }
+    }]);
+    return utilities;
+}();
+
+var currentState = {
+    count: 0,
+    areaCount: 0,
+    query: utilities.getUrlParams().q || '',
+    filter: {
+        id: utilities.getUrlParams().filter || '',
+        name: utilities.getUrlParams().filter || ''
+    },
+    apiUrl: "https://search.discovery.onsdigital.co.uk"
+};
+
+var state = function () {
+    function state() {
+        classCallCheck(this, state);
+    }
+
+    createClass(state, null, [{
+        key: 'getState',
+        value: function getState() {
+            return JSON.parse(JSON.stringify(currentState));
+        }
+    }, {
+        key: 'updateState',
+        value: function updateState(action) {
+            var newState = this.getState();
+            switch (action.type) {
+                case 'UPDATE_COUNT':
+                    {
+                        newState.count = action.value;
+                        break;
+                    }
+                case 'UPDATE_AREA_COUNT':
+                    {
+                        newState.areaCount = action.value;
+                        break;
+                    }
+                case 'UPDATE_QUERY':
+                    {
+                        newState.query = action.value;
+                        break;
+                    }
+                case 'UPDATE_FILTER':
+                    {
+                        newState.filter = action.value;
+                        break;
+                    }
+            }
+
+            currentState = newState;
+        }
+    }]);
+    return state;
+}();
+
 var inputElem$1 = document.getElementById('search__input');
 
 function updateResults() {
@@ -409,6 +443,7 @@ function updateResults() {
 
 var inputElem = document.getElementById('search__input');
 var searchElem = document.getElementById('search');
+var typeahead$1 = document.getElementById('typeahead');
 
 var bind = function () {
     function bind() {
@@ -442,12 +477,112 @@ var bind = function () {
             }
         }
     }, {
+        key: 'typeaheadKeys',
+        value: function typeaheadKeys() {
+            searchElem.addEventListener('keydown', function (event) {
+                var keyCode = event.keyCode;
+                var upKey = 38;
+                var downKey = 40;
+                var escKey = 27;
+
+                if (keyCode !== upKey && keyCode !== downKey && keyCode !== escKey) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                if (keyCode === escKey && typeahead$1.childNodes.length !== 0) {
+                    typeahead$1.style.display = 'none';
+                    render.emptyQuerySuggestions();
+                    return;
+                }
+
+                var suggestions = document.querySelectorAll('.typeahead__item');
+                var focusIndex = getFocusIndex(suggestions) !== undefined ? getFocusIndex(suggestions) : -1;
+
+                if (keyCode === downKey && focusIndex === -1 && typeahead$1.childNodes.length === 0 && inputElem.value) {
+                    utilities.getSuggestions(inputElem.value).then(function (suggestions) {
+                        render.querySuggestions(suggestions);
+                    });
+                }
+
+                // Don't do anything for upkey if we're focused on the input
+                if (focusIndex === -1 && keyCode === upKey) {
+                    return;
+                }
+
+                // Stop focus from attempting to go more than size of suggestions
+                if (focusIndex >= suggestions.length - 1 && keyCode === downKey) {
+                    return false;
+                }
+
+                // Stop focus trying to go to negative numbers
+                if (focusIndex === 0 && keyCode === upKey) {
+                    console.log('First entry');
+                    return false;
+                }
+
+                // Remove class from focused suggestion
+                if (focusIndex !== -1) {
+                    suggestions[focusIndex].classList.remove('focused');
+                }
+
+                // Edit focus index according to direction of arrow keys
+                if (keyCode === downKey) {
+                    focusIndex++;
+                }
+                if (keyCode === upKey) {
+                    focusIndex--;
+                }
+
+                // Make sure next suggestion is in view, if not scroll into view
+                var suggestionRect = suggestions[focusIndex].getBoundingClientRect();
+                var containerRect = typeahead$1.getBoundingClientRect();
+                var bottomDiff = suggestionRect.bottom - containerRect.bottom;
+                var topDiff = suggestionRect.top - containerRect.top;
+                if (bottomDiff > 0) {
+                    typeahead$1.scrollTop = typeahead$1.scrollTop + bottomDiff;
+                }
+                if (topDiff < 0) {
+                    typeahead$1.scrollTop = typeahead$1.scrollTop + topDiff;
+                }
+
+                // Add focus class to next suggestion and update input value
+                suggestions[focusIndex].classList.add('focused');
+                inputElem.value = suggestions[focusIndex].textContent;
+            });
+
+            function getFocusIndex(suggestions) {
+                var response = void 0;
+                suggestions.forEach(function (suggestion, index) {
+                    if (suggestion.classList.contains('focused')) {
+                        response = index;
+                    }
+                });
+                return response;
+            }
+        }
+    }, {
+        key: 'searchFocus',
+        value: function searchFocus() {
+            searchElem.addEventListener('focusout', function () {
+                typeahead$1.style.display = 'none';
+                render.emptyQuerySuggestions();
+            });
+        }
+    }, {
         key: 'searchSubmit',
         value: function searchSubmit() {
 
             searchElem.addEventListener('submit', function (event) {
                 var query = inputElem.value;
                 event.preventDefault();
+
+                if (typeahead$1.childNodes.length !== 0) {
+                    typeahead$1.style.display = 'none';
+                    render.emptyQuerySuggestions();
+                }
+
                 state.updateState({
                     type: 'UPDATE_QUERY',
                     value: query
@@ -470,12 +605,19 @@ var bind = function () {
     }, {
         key: 'searchChange',
         value: function searchChange() {
+            var inputTimer = void 0;
 
             inputElem.addEventListener('input', function (event) {
-                // const inputValue = inputElem.value;
-                // fetch(`https://search.discovery.onsdigital.co.uk/suggest?q=${inputValue}`).then(response => response.json()).then(response => {
-                //     console.log({inputValue, response});
-                // });
+                if (!inputElem.value) {
+                    return;
+                }
+
+                clearTimeout(inputTimer);
+                inputTimer = setTimeout(function () {
+                    utilities.getSuggestions(inputElem.value).then(function (suggestions) {
+                        render.querySuggestions(suggestions);
+                    });
+                }, 100);
             });
         }
     }, {
@@ -507,10 +649,9 @@ var bind = function () {
 
 /* Imports */
 function init() {
-    // const currentState = state.getState();
-    // window.history.pushState({query: currentState.query, filter: currentState.filter.id}, '', location);
-
     updateResults();
+    bind.typeaheadKeys();
+    bind.searchFocus();
     bind.searchChange();
     bind.searchSubmit();
     bind.historyState();
