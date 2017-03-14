@@ -24,112 +24,6 @@ var createClass = function () {
   };
 }();
 
-var utilities = function () {
-    function utilities() {
-        classCallCheck(this, utilities);
-    }
-
-    createClass(utilities, null, [{
-        key: 'getEnvironmentType',
-        value: function getEnvironmentType(hostname) {
-            switch (hostname) {
-                case 'localhost':
-                    {
-                        return 'development';
-                    }
-                case '127.0.0.1':
-                    {
-                        return 'development';
-                    }
-                default:
-                    {
-                        return 'production';
-                    }
-            }
-        }
-    }, {
-        key: 'getUrlParams',
-        value: function getUrlParams() {
-            var queryString = location.search;
-            if (!queryString) {
-                return {};
-            }
-
-            var queries = queryString.split(/[\&?]+/);
-            queries.splice(0, 1);
-
-            var returnValue = {};
-            queries.forEach(function (query) {
-                var splitQuery = query.split('=');
-                try {
-                    splitQuery[1] = decodeURIComponent(splitQuery[1]);
-                } catch (e) {
-                    console.error(e);
-                }
-
-                returnValue[splitQuery[0]] = splitQuery[1];
-            });
-
-            return returnValue;
-        }
-    }]);
-    return utilities;
-}();
-
-var currentState = {
-    count: 0,
-    areaCount: 0,
-    query: utilities.getUrlParams().q || '',
-    filter: {
-        id: utilities.getUrlParams().filter || '',
-        name: utilities.getUrlParams().filter || ''
-    },
-    apiUrl: "https://search.discovery.onsdigital.co.uk"
-};
-
-var state = function () {
-    function state() {
-        classCallCheck(this, state);
-    }
-
-    createClass(state, null, [{
-        key: 'getState',
-        value: function getState() {
-            return JSON.parse(JSON.stringify(currentState));
-        }
-    }, {
-        key: 'updateState',
-        value: function updateState(action) {
-            var newState = this.getState();
-            switch (action.type) {
-                case 'UPDATE_COUNT':
-                    {
-                        newState.count = action.value;
-                        break;
-                    }
-                case 'UPDATE_AREA_COUNT':
-                    {
-                        newState.areaCount = action.value;
-                        break;
-                    }
-                case 'UPDATE_QUERY':
-                    {
-                        newState.query = action.value;
-                        break;
-                    }
-                case 'UPDATE_FILTER':
-                    {
-                        newState.filter = action.value;
-                        break;
-                    }
-            }
-
-            currentState = newState;
-        }
-    }]);
-    return state;
-}();
-
 var templates = function () {
     function templates() {
         classCallCheck(this, templates);
@@ -195,7 +89,7 @@ var templates = function () {
 
 var appElem = document.getElementById('app');
 var _title = document.getElementById('title');
-var typeahead$1 = document.getElementById('typeahead');
+var typeahead$2 = document.getElementById('typeahead');
 
 var render = function () {
     function render() {
@@ -206,14 +100,14 @@ var render = function () {
         key: 'querySuggestions',
         value: function querySuggestions(suggestions) {
             this.emptyQuerySuggestions();
-            typeahead$1.innerHTML = '<ul class="typeahead__list"><li class="typeahead__item">' + suggestions.join('</li><li class="typeahead__item">') + '</li></ul>';
-            typeahead$1.style.display = 'block';
+            typeahead$2.innerHTML = '<ul class="typeahead__list"><li class="typeahead__item">' + suggestions.join('</li><li class="typeahead__item">') + '</li></ul>';
+            typeahead$2.style.display = 'block';
         }
     }, {
         key: 'emptyQuerySuggestions',
         value: function emptyQuerySuggestions() {
-            while (typeahead$1.firstChild) {
-                typeahead$1.removeChild(typeahead$1.firstChild);
+            while (typeahead$2.firstChild) {
+                typeahead$2.removeChild(typeahead$2.firstChild);
             }
         }
     }, {
@@ -346,6 +240,128 @@ var render = function () {
     return render;
 }();
 
+var utilities = function () {
+    function utilities() {
+        classCallCheck(this, utilities);
+    }
+
+    createClass(utilities, null, [{
+        key: 'getEnvironmentType',
+        value: function getEnvironmentType(hostname) {
+            switch (hostname) {
+                case 'localhost':
+                    {
+                        return 'development';
+                    }
+                case '127.0.0.1':
+                    {
+                        return 'development';
+                    }
+                default:
+                    {
+                        return 'production';
+                    }
+            }
+        }
+    }, {
+        key: 'getUrlParams',
+        value: function getUrlParams() {
+            var queryString = location.search;
+            if (!queryString) {
+                return {};
+            }
+
+            var queries = queryString.split(/[\&?]+/);
+            queries.splice(0, 1);
+
+            var returnValue = {};
+            queries.forEach(function (query) {
+                var splitQuery = query.split('=');
+                try {
+                    splitQuery[1] = decodeURIComponent(splitQuery[1]);
+                } catch (e) {
+                    console.error(e);
+                }
+
+                returnValue[splitQuery[0]] = splitQuery[1];
+            });
+
+            return returnValue;
+        }
+    }, {
+        key: 'getSuggestions',
+        value: function getSuggestions(query) {
+            return fetch(state.getState().apiUrl + '/suggest?q=' + query).then(function (response) {
+                return response.json();
+            }).then(function (response) {
+                if (response.total_results === 0) {
+                    typeahead.style.display = 'none';
+                    render.emptyQuerySuggestions();
+                    return;
+                }
+                return response.results.map(function (result) {
+                    return result.body.title;
+                });
+            });
+        }
+    }]);
+    return utilities;
+}();
+
+var currentState = {
+    count: 0,
+    areaCount: 0,
+    query: utilities.getUrlParams().q || '',
+    filter: {
+        id: utilities.getUrlParams().filter || '',
+        name: utilities.getUrlParams().filter || ''
+    },
+    apiUrl: "https://search.discovery.onsdigital.co.uk"
+};
+
+var state = function () {
+    function state() {
+        classCallCheck(this, state);
+    }
+
+    createClass(state, null, [{
+        key: 'getState',
+        value: function getState() {
+            return JSON.parse(JSON.stringify(currentState));
+        }
+    }, {
+        key: 'updateState',
+        value: function updateState(action) {
+            var newState = this.getState();
+            switch (action.type) {
+                case 'UPDATE_COUNT':
+                    {
+                        newState.count = action.value;
+                        break;
+                    }
+                case 'UPDATE_AREA_COUNT':
+                    {
+                        newState.areaCount = action.value;
+                        break;
+                    }
+                case 'UPDATE_QUERY':
+                    {
+                        newState.query = action.value;
+                        break;
+                    }
+                case 'UPDATE_FILTER':
+                    {
+                        newState.filter = action.value;
+                        break;
+                    }
+            }
+
+            currentState = newState;
+        }
+    }]);
+    return state;
+}();
+
 var inputElem$1 = document.getElementById('search__input');
 
 function updateResults() {
@@ -424,7 +440,7 @@ function updateResults() {
 
 var inputElem = document.getElementById('search__input');
 var searchElem = document.getElementById('search');
-var typeahead = document.getElementById('typeahead');
+var typeahead$1 = document.getElementById('typeahead');
 
 var bind = function () {
     function bind() {
@@ -472,9 +488,8 @@ var bind = function () {
 
                 event.preventDefault();
 
-                if (keyCode === escKey && typeahead.childNodes.length !== 0) {
-                    console.log('Close suggestions');
-                    typeahead.style.display = 'none';
+                if (keyCode === escKey && typeahead$1.childNodes.length !== 0) {
+                    typeahead$1.style.display = 'none';
                     render.emptyQuerySuggestions();
                     return;
                 }
@@ -482,9 +497,10 @@ var bind = function () {
                 var suggestions = document.querySelectorAll('.typeahead__item');
                 var focusIndex = getFocusIndex(suggestions) !== undefined ? getFocusIndex(suggestions) : -1;
 
-                if (keyCode === downKey && focusIndex === -1 && typeahead.childNodes.length === 0) {
-                    //TODO get suggestions on down arrow here
-                    console.log('Get suggestions');
+                if (keyCode === downKey && focusIndex === -1 && typeahead$1.childNodes.length === 0 && inputElem.value) {
+                    utilities.getSuggestions(inputElem.value).then(function (suggestions) {
+                        render.querySuggestions(suggestions);
+                    });
                 }
 
                 // Don't do anything for upkey if we're focused on the input
@@ -518,14 +534,14 @@ var bind = function () {
 
                 // Make sure next suggestion is in view, if not scroll into view
                 var suggestionRect = suggestions[focusIndex].getBoundingClientRect();
-                var containerRect = typeahead.getBoundingClientRect();
+                var containerRect = typeahead$1.getBoundingClientRect();
                 var bottomDiff = suggestionRect.bottom - containerRect.bottom;
                 var topDiff = suggestionRect.top - containerRect.top;
                 if (bottomDiff > 0) {
-                    typeahead.scrollTop = typeahead.scrollTop + bottomDiff;
+                    typeahead$1.scrollTop = typeahead$1.scrollTop + bottomDiff;
                 }
                 if (topDiff < 0) {
-                    typeahead.scrollTop = typeahead.scrollTop + topDiff;
+                    typeahead$1.scrollTop = typeahead$1.scrollTop + topDiff;
                 }
 
                 // Add focus class to next suggestion and update input value
@@ -547,7 +563,7 @@ var bind = function () {
         key: 'searchFocus',
         value: function searchFocus() {
             searchElem.addEventListener('focusout', function () {
-                typeahead.style.display = 'none';
+                typeahead$1.style.display = 'none';
                 render.emptyQuerySuggestions();
             });
         }
@@ -558,6 +574,12 @@ var bind = function () {
             searchElem.addEventListener('submit', function (event) {
                 var query = inputElem.value;
                 event.preventDefault();
+
+                if (typeahead$1.childNodes.length !== 0) {
+                    typeahead$1.style.display = 'none';
+                    render.emptyQuerySuggestions();
+                }
+
                 state.updateState({
                     type: 'UPDATE_QUERY',
                     value: query
@@ -583,19 +605,13 @@ var bind = function () {
             var inputTimer = void 0;
 
             inputElem.addEventListener('input', function (event) {
-                var inputValue = event.target.value;
+                if (!inputElem.value) {
+                    return;
+                }
 
                 clearTimeout(inputTimer);
                 inputTimer = setTimeout(function () {
-                    fetch(state.getState().apiUrl + '/suggest?q=' + inputValue).then(function (response) {
-                        return response.json();
-                    }).then(function (response) {
-                        if (response.total_results === 0) {
-                            return;
-                        }
-                        var suggestions = response.results.map(function (result) {
-                            return result.body.title;
-                        });
+                    utilities.getSuggestions(inputElem.value).then(function (suggestions) {
                         render.querySuggestions(suggestions);
                     });
                 }, 100);

@@ -1,6 +1,7 @@
 import state from './state';
 import updateResults from './updateResults';
 import render from './render';
+import utilities from './utilities';
 
 const inputElem = document.getElementById('search__input');
 const searchElem = document.getElementById('search');
@@ -47,7 +48,6 @@ export default class bind {
             event.preventDefault();
 
             if (keyCode === escKey && typeahead.childNodes.length !== 0) {
-                console.log('Close suggestions');
                 typeahead.style.display = 'none';
                 render.emptyQuerySuggestions();
                 return;
@@ -56,9 +56,10 @@ export default class bind {
             const suggestions = document.querySelectorAll('.typeahead__item');
             let focusIndex = (getFocusIndex(suggestions) !== undefined) ? getFocusIndex(suggestions) : -1;
 
-            if (keyCode === downKey && focusIndex === -1 && typeahead.childNodes.length === 0) {
-                //TODO get suggestions on down arrow here
-                console.log('Get suggestions');
+            if (keyCode === downKey && focusIndex === -1 && typeahead.childNodes.length === 0 && inputElem.value) {
+                utilities.getSuggestions(inputElem.value).then(suggestions => {
+                    render.querySuggestions(suggestions);
+                });
             }
 
             // Don't do anything for upkey if we're focused on the input
@@ -130,6 +131,12 @@ export default class bind {
         searchElem.addEventListener('submit', event => {
             const query = inputElem.value;
             event.preventDefault();
+
+            if (typeahead.childNodes.length !== 0) {
+                typeahead.style.display = 'none';
+                render.emptyQuerySuggestions();
+            }
+
             state.updateState({
                 type: 'UPDATE_QUERY',
                 value: query
@@ -154,17 +161,13 @@ export default class bind {
         let inputTimer;
 
         inputElem.addEventListener('input', event => {
-            const inputValue = event.target.value;
+            if (!inputElem.value) {
+                return;
+            }
 
             clearTimeout(inputTimer);
             inputTimer = setTimeout(() => {
-                fetch(`${state.getState().apiUrl}/suggest?q=${inputValue}`).then(response => response.json()).then(response => {
-                    if (response.total_results === 0) {
-                        return;
-                    }
-                    const suggestions = response.results.map(result => {
-                        return result.body.title;
-                    });
+                utilities.getSuggestions(inputElem.value).then(suggestions => {
                     render.querySuggestions(suggestions);
                 });
             }, 100)
