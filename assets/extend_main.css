@@ -17,7 +17,7 @@ main {
     flex: 1;
 }
 
-/* Search autocomplete/typeahad */
+/* Search autocomplete/typeahead */
 #typeahead {
     display: none;
     position: absolute;
@@ -25,7 +25,9 @@ main {
     max-height: 320px;
     overflow: scroll;
     top: 64px;
-    border: 1px solid #58595B;
+    border-right: 1px solid #D0D2D3;
+    border-bottom: 1px solid #D0D2D3;
+    border-left: 1px solid #D0D2D3;
 }
 
 .typeahead__list {
