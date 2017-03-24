@@ -55,6 +55,7 @@ export default function updateResults() {
                 });
                 render.allResultsForAreaType(response.results);
                 bind.areaClick();
+                bind.areaHover();
             });
             return false;
         }
@@ -62,11 +63,13 @@ export default function updateResults() {
         if (state.getState().filter.id) {
             render.datasetResults(response.results);
             bind.areaClick();
+            bind.areaHover();
             return false;
         }
 
         render.allResults(response.area_results, response.results);
         bind.areaClick();
+        bind.areaHover();
     }).catch(error => {
         console.log(`Error getting results data \n`, error);
         render.emptyResults();

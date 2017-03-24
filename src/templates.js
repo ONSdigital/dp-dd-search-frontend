@@ -72,7 +72,7 @@ export default class templates {
 
     static areaResultItem(data) {
         return (
-            `<div class="col col--lg-half background--iron-light margin-bottom--2 padding-top--2 padding-right--1 padding-bottom--2 padding-left--1">
+            `<div class="col col--lg-half background--iron-light margin-bottom--2 padding-top--2 padding-right--1 padding-bottom--2 padding-left--1 area-tile">
             <span class="baseline">${data.type}</span>
             <span class="icon icon-arrow-right--dark float-right margin-top--1"></span>
             <h3 class="flush">
