@@ -11,26 +11,77 @@ export default class bind {
 
     static areaClick() {
 
+        const areaTiles = document.querySelectorAll('.area-tile');
         const areaLinks = document.querySelectorAll('.area-link');
 
-        areaLinks.forEach(link => {
+        areaTiles.forEach(link => {
             link.addEventListener('click', event => {
                 handleClick(event);
             });
         });
 
+        areaLinks.forEach(link => {
+            link.addEventListener('click', event => {
+                event.preventDefault();
+            });
+        });
+
         function handleClick(event) {
-            event.preventDefault();
+            const link = event.target.closest('.area-tile').querySelector('.area-link');
+
             state.updateState({
                 type: 'UPDATE_FILTER',
                 value: {
-                    id: event.target.getAttribute('data-filter'),
-                    name: event.target.getAttribute('data-filter-name')
+                    id: link.getAttribute('data-filter'),
+                    name: link.getAttribute('data-filter-name')
                 }
             });
             const currentState = state.getState();
             window.history.pushState(state.getState(), ``, `?q=${currentState.query}&filter=${currentState.filter.id}`);
             updateResults();
+        }
+    }
+
+    static areaHover() {
+        const areaTiles = document.querySelectorAll('.area-tile');
+
+        areaTiles.forEach(tile => {
+            tile.addEventListener('mouseenter', event => {
+                handleHover(event);
+            });
+            tile.addEventListener('mouseleave', event => {
+                handleHoverLeave(event)
+            });
+        });
+
+        function handleHover(event) {
+            const tile = event.target.closest('.area-tile');
+            tile.style.cursor = "pointer";
+            addHighlight(tile);
+        }
+
+        function handleHoverLeave(event) {
+            const tile = event.target.closest('.area-tile');
+            tile.style.cursor = "default";
+            removeHighlight(tile);
+        }
+
+        function addHighlight(tileNode) {
+            tileNode.classList.remove('background--iron-light');
+            tileNode.classList.add('background--ship-grey', 'js-hover-click');
+
+            const icon = tileNode.querySelectorAll('.icon-arrow-right--dark')[0];
+            icon.classList.remove('icon-arrow-right--dark');
+            icon.classList.add('icon-arrow-right--light');
+        }
+
+        function removeHighlight(tileNode) {
+            tileNode.classList.remove('background--ship-grey', 'js-hover-click');
+            tileNode.classList.add('background--iron-light');
+
+            const icon = tileNode.querySelectorAll('.icon-arrow-right--light')[0];
+            icon.classList.remove('icon-arrow-right--light');
+            icon.classList.add('icon-arrow-right--dark');
         }
     }
 

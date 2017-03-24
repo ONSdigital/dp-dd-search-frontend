@@ -81,7 +81,7 @@ var templates = function () {
     }, {
         key: 'areaResultItem',
         value: function areaResultItem(data) {
-            return '<div class="col col--lg-half background--iron-light margin-bottom--2 padding-top--2 padding-right--1 padding-bottom--2 padding-left--1">\n            <span class="baseline">' + data.type + '</span>\n            <span class="icon icon-arrow-right--dark float-right margin-top--1"></span>\n            <h3 class="flush">\n                <a class="area-link" href="/?q=' + state.query + '&filter=' + data.type_id + '" data-filter="' + data.type_id + '" data-filter-name="' + data.type + '">\n                    ' + data.title + '\n                </a>\n            </h3>\n        </div>\n        ';
+            return '<div class="col col--lg-half background--iron-light margin-bottom--2 padding-top--2 padding-right--1 padding-bottom--2 padding-left--1 area-tile">\n            <span class="baseline">' + data.type + '</span>\n            <span class="icon icon-arrow-right--dark float-right margin-top--1"></span>\n            <h3 class="flush">\n                <a class="area-link" href="/?q=' + state.query + '&filter=' + data.type_id + '" data-filter="' + data.type_id + '" data-filter-name="' + data.type + '">\n                    ' + data.title + '\n                </a>\n            </h3>\n        </div>\n        ';
         }
     }]);
     return templates;
@@ -422,6 +422,7 @@ function updateResults() {
                 });
                 render.allResultsForAreaType(response.results);
                 bind.areaClick();
+                bind.areaHover();
             });
             return false;
         }
@@ -429,11 +430,13 @@ function updateResults() {
         if (state.getState().filter.id) {
             render.datasetResults(response.results);
             bind.areaClick();
+            bind.areaHover();
             return false;
         }
 
         render.allResults(response.area_results, response.results);
         bind.areaClick();
+        bind.areaHover();
     }).catch(function (error) {
         console.log('Error getting results data \n', error);
         render.emptyResults();
@@ -454,26 +457,78 @@ var bind = function () {
         key: 'areaClick',
         value: function areaClick() {
 
+            var areaTiles = document.querySelectorAll('.area-tile');
             var areaLinks = document.querySelectorAll('.area-link');
 
-            areaLinks.forEach(function (link) {
+            areaTiles.forEach(function (link) {
                 link.addEventListener('click', function (event) {
                     handleClick(event);
                 });
             });
 
+            areaLinks.forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                });
+            });
+
             function handleClick(event) {
-                event.preventDefault();
+                var link = event.target.closest('.area-tile').querySelector('.area-link');
+
                 state.updateState({
                     type: 'UPDATE_FILTER',
                     value: {
-                        id: event.target.getAttribute('data-filter'),
-                        name: event.target.getAttribute('data-filter-name')
+                        id: link.getAttribute('data-filter'),
+                        name: link.getAttribute('data-filter-name')
                     }
                 });
                 var currentState = state.getState();
                 window.history.pushState(state.getState(), '', '?q=' + currentState.query + '&filter=' + currentState.filter.id);
                 updateResults();
+            }
+        }
+    }, {
+        key: 'areaHover',
+        value: function areaHover() {
+            var areaTiles = document.querySelectorAll('.area-tile');
+
+            areaTiles.forEach(function (tile) {
+                tile.addEventListener('mouseenter', function (event) {
+                    handleHover(event);
+                });
+                tile.addEventListener('mouseleave', function (event) {
+                    handleHoverLeave(event);
+                });
+            });
+
+            function handleHover(event) {
+                var tile = event.target.closest('.area-tile');
+                tile.style.cursor = "pointer";
+                addHighlight(tile);
+            }
+
+            function handleHoverLeave(event) {
+                var tile = event.target.closest('.area-tile');
+                tile.style.cursor = "default";
+                removeHighlight(tile);
+            }
+
+            function addHighlight(tileNode) {
+                tileNode.classList.remove('background--iron-light');
+                tileNode.classList.add('background--ship-grey', 'js-hover-click');
+
+                var icon = tileNode.querySelectorAll('.icon-arrow-right--dark')[0];
+                icon.classList.remove('icon-arrow-right--dark');
+                icon.classList.add('icon-arrow-right--light');
+            }
+
+            function removeHighlight(tileNode) {
+                tileNode.classList.remove('background--ship-grey', 'js-hover-click');
+                tileNode.classList.add('background--iron-light');
+
+                var icon = tileNode.querySelectorAll('.icon-arrow-right--light')[0];
+                icon.classList.remove('icon-arrow-right--light');
+                icon.classList.add('icon-arrow-right--dark');
             }
         }
     }, {
@@ -648,6 +703,7 @@ var bind = function () {
 }();
 
 /* Imports */
+/* Initialise application */
 function init() {
     updateResults();
     bind.typeaheadKeys();
