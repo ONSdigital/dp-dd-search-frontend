@@ -14,8 +14,6 @@ export default class bind {
         const areaTiles = [].slice.call(document.querySelectorAll('.area-tile'));
         const areaLinks = [].slice.call(document.querySelectorAll('.area-link'));
 
-        console.log({areaTiles, areaLinks});
-
         areaTiles.forEach(link => {
             link.addEventListener('click', event => {
                 handleClick(event);

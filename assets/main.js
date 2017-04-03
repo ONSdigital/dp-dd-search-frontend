@@ -460,8 +460,6 @@ var bind = function () {
             var areaTiles = [].slice.call(document.querySelectorAll('.area-tile'));
             var areaLinks = [].slice.call(document.querySelectorAll('.area-link'));
 
-            console.log({ areaTiles: areaTiles, areaLinks: areaLinks });
-
             areaTiles.forEach(function (link) {
                 link.addEventListener('click', function (event) {
                     handleClick(event);
