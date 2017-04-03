@@ -456,9 +456,11 @@ var bind = function () {
     createClass(bind, null, [{
         key: 'areaClick',
         value: function areaClick() {
+            // Slightly hacky fix to make nodeList type an array, so that it is iterable in older versions of Chrome (see https://medium.com/@devlucky/nodelist-object-is-finally-an-iterator-cc529d6e2490 for the explanation)
+            var areaTiles = [].slice.call(document.querySelectorAll('.area-tile'));
+            var areaLinks = [].slice.call(document.querySelectorAll('.area-link'));
 
-            var areaTiles = document.querySelectorAll('.area-tile');
-            var areaLinks = document.querySelectorAll('.area-link');
+            console.log({ areaTiles: areaTiles, areaLinks: areaLinks });
 
             areaTiles.forEach(function (link) {
                 link.addEventListener('click', function (event) {
@@ -490,7 +492,8 @@ var bind = function () {
     }, {
         key: 'areaHover',
         value: function areaHover() {
-            var areaTiles = document.querySelectorAll('.area-tile');
+            // Slightly hacky fix to make nodeList type an array, so that it is iterable in older versions of Chrome (see https://medium.com/@devlucky/nodelist-object-is-finally-an-iterator-cc529d6e2490 for the explanation)
+            var areaTiles = [].slice.call(document.querySelectorAll('.area-tile'));
 
             areaTiles.forEach(function (tile) {
                 tile.addEventListener('mouseenter', function (event) {
@@ -573,7 +576,6 @@ var bind = function () {
 
                 // Stop focus trying to go to negative numbers
                 if (focusIndex === 0 && keyCode === upKey) {
-                    console.log('First entry');
                     return false;
                 }
 

@@ -10,9 +10,11 @@ const typeahead = document.getElementById('typeahead');
 export default class bind {
 
     static areaClick() {
+        // Slightly hacky fix to make nodeList type an array, so that it is iterable in older versions of Chrome (see https://medium.com/@devlucky/nodelist-object-is-finally-an-iterator-cc529d6e2490 for the explanation)
+        const areaTiles = [].slice.call(document.querySelectorAll('.area-tile'));
+        const areaLinks = [].slice.call(document.querySelectorAll('.area-link'));
 
-        const areaTiles = document.querySelectorAll('.area-tile');
-        const areaLinks = document.querySelectorAll('.area-link');
+        console.log({areaTiles, areaLinks});
 
         areaTiles.forEach(link => {
             link.addEventListener('click', event => {
@@ -43,7 +45,8 @@ export default class bind {
     }
 
     static areaHover() {
-        const areaTiles = document.querySelectorAll('.area-tile');
+        // Slightly hacky fix to make nodeList type an array, so that it is iterable in older versions of Chrome (see https://medium.com/@devlucky/nodelist-object-is-finally-an-iterator-cc529d6e2490 for the explanation)
+        const areaTiles = [].slice.call(document.querySelectorAll('.area-tile'));
 
         areaTiles.forEach(tile => {
             tile.addEventListener('mouseenter', event => {
@@ -125,7 +128,6 @@ export default class bind {
 
             // Stop focus trying to go to negative numbers
             if (focusIndex === 0 && keyCode === upKey) {
-                console.log('First entry');
                 return false;
             }
 
